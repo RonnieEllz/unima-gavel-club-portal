@@ -11,6 +11,7 @@ alter table attendance enable row level security;
 alter table posts enable row level security;
 alter table gallery enable row level security;
 alter table site_settings enable row level security;
+alter table landing_page_settings enable row level security;
 alter table audit_logs enable row level security;
 alter table semesters enable row level security;
 alter table member_progressions enable row level security;
@@ -44,11 +45,17 @@ drop policy if exists "posts_select_published_anon" on posts;
 drop policy if exists "gallery_select_authenticated" on gallery;
 drop policy if exists "gallery_select_anon" on gallery;
 drop policy if exists "gallery_insert_content_admin" on gallery;
+drop policy if exists "gallery_update_content_admin" on gallery;
 drop policy if exists "gallery_delete_content_admin" on gallery;
 drop policy if exists "site_settings_select_admin" on site_settings;
 drop policy if exists "site_settings_insert_admin" on site_settings;
 drop policy if exists "site_settings_update_admin" on site_settings;
 drop policy if exists "site_settings_delete_admin" on site_settings;
+drop policy if exists "site_settings_select_public_announcement" on site_settings;
+drop policy if exists "landing_page_settings_select_public" on landing_page_settings;
+drop policy if exists "landing_page_settings_select_admin" on landing_page_settings;
+drop policy if exists "landing_page_settings_insert_admin" on landing_page_settings;
+drop policy if exists "landing_page_settings_update_admin" on landing_page_settings;
 drop policy if exists "storage_public_read" on storage.objects;
 drop policy if exists "storage_content_admin_insert" on storage.objects;
 drop policy if exists "storage_content_admin_delete" on storage.objects;
@@ -317,12 +324,41 @@ create policy "gallery_delete_content_admin"
   on gallery for delete
   using (has_content_access());
 
+create policy "gallery_update_content_admin"
+  on gallery for update
+  using (has_content_access())
+  with check (has_content_access());
+
 -- ---------------------------------------------------------------------------
 -- SITE SETTINGS
 -- ---------------------------------------------------------------------------
 create policy "site_settings_select_admin"
   on site_settings for select
   using (can_manage_settings());
+
+create policy "site_settings_select_public_announcement"
+  on site_settings for select
+  to anon, authenticated
+  using (key = 'announcement_text');
+
+-- Landing configuration contains only public-facing content.
+create policy "landing_page_settings_select_public"
+  on landing_page_settings for select
+  to anon, authenticated
+  using (true);
+
+create policy "landing_page_settings_select_admin"
+  on landing_page_settings for select
+  using (can_manage_settings());
+
+create policy "landing_page_settings_insert_admin"
+  on landing_page_settings for insert
+  with check (can_manage_settings());
+
+create policy "landing_page_settings_update_admin"
+  on landing_page_settings for update
+  using (can_manage_settings())
+  with check (can_manage_settings());
 
 create policy "site_settings_insert_admin"
   on site_settings for insert

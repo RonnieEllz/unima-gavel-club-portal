@@ -27,14 +27,14 @@ export default async function AdminReportsPage({
   let meetings: { id: string; title: string; date: string; time: string; venue: string }[] = [];
   let attendance: { id: string; meeting_id: string; member_id: string; checked_in_at: string }[] = [];
   let eligibleMembers: { id: string; membership_activated_at: string | null; payment_verified: boolean }[] = [];
-  let error = false;
+  let errorMessage: string | null = null;
 
   if (!invalidRange) {
     let membersQuery = supabase.from("profiles").select("id, membership_activated_at, payment_verified").eq("membership_status", "active");
     if (program) membersQuery = membersQuery.ilike("program", `%${program}%`);
     if (Number.isInteger(year) && year >= 1 && year <= 5) membersQuery = membersQuery.eq("year_of_study", year);
     const membersResult = await membersQuery;
-    if (membersResult.error) error = true;
+    if (membersResult.error) errorMessage = membersResult.error.message;
     eligibleMembers = (membersResult.data ?? []) as typeof eligibleMembers;
 
     let meetingsQuery = supabase
@@ -50,7 +50,7 @@ export default async function AdminReportsPage({
 
     const meetingsResult = await meetingsQuery;
     meetings = (meetingsResult.data ?? []) as typeof meetings;
-    error = error || Boolean(meetingsResult.error);
+    if (meetingsResult.error) errorMessage = meetingsResult.error.message;
 
     if (meetings.length > 0) {
       const attendanceResult = await supabase
@@ -59,7 +59,7 @@ export default async function AdminReportsPage({
         .in("meeting_id", meetings.map((meeting) => meeting.id))
         .order("checked_in_at", { ascending: false });
       attendance = (attendanceResult.data ?? []) as typeof attendance;
-      error = error || Boolean(attendanceResult.error);
+      if (attendanceResult.error) errorMessage = attendanceResult.error.message;
     }
   }
 
@@ -107,7 +107,11 @@ export default async function AdminReportsPage({
       </form>
 
       {invalidRange && <p className="mt-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">The start date cannot be after the end date.</p>}
-      {error && <p className="mt-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">Attendance data could not be loaded.</p>}
+      {errorMessage && (
+        <p className="mt-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+          Attendance data could not be loaded: {errorMessage}
+        </p>
+      )}
 
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
         {[

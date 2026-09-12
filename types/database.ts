@@ -97,6 +97,33 @@ export interface SiteSetting {
   updated_at: string;
 }
 
+export interface LandingPageSettings {
+  id: boolean;
+  hero_eyebrow: string;
+  hero_title: string;
+  hero_description: string;
+  hero_image: string | null;
+  primary_cta_label: string;
+  primary_cta_url: string;
+  secondary_cta_label: string;
+  secondary_cta_url: string;
+  intro_heading: string;
+  intro_content: string;
+  intro_image: string | null;
+  intro_image_alt: string;
+  show_announcement: boolean;
+  show_intro: boolean;
+  show_meeting: boolean;
+  show_stories: boolean;
+  show_updates: boolean;
+  show_gallery: boolean;
+  seo_title: string;
+  seo_description: string;
+  social_image: string | null;
+  updated_by: string | null;
+  updated_at: string;
+}
+
 export interface AdminRoleRow {
   id: string;
   user_id: string;
@@ -139,6 +166,7 @@ export interface Database {
       posts: { Row: Post; Insert: Partial<Post>; Update: Partial<Post>; Relationships: [] };
       gallery: { Row: GalleryImage; Insert: Partial<GalleryImage>; Update: Partial<GalleryImage>; Relationships: [] };
       site_settings: { Row: SiteSetting; Insert: Partial<SiteSetting>; Update: Partial<SiteSetting>; Relationships: [] };
+      landing_page_settings: { Row: LandingPageSettings; Insert: Partial<LandingPageSettings>; Update: Partial<LandingPageSettings>; Relationships: [] };
       admin_roles: { Row: AdminRoleRow; Insert: Partial<AdminRoleRow>; Update: Partial<AdminRoleRow>; Relationships: [] };
     };
     Views: Record<string, never>;

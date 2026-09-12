@@ -37,6 +37,33 @@ export const postSchema = z.object({
 export const postTypeSchema = z.enum(["story", "update"]);
 export const adminRoleSchema = z.enum(["super_admin", "administrator", "operations_admin", "content_administrator"]);
 
+const internalPathSchema = z.string().trim().regex(/^\/[A-Za-z0-9_/?=&%.-]*$/, "Use an internal site path.");
+const optionalImageSchema = z.string().trim().refine((value) => value === "" || isSafeImageUrl(value), "Use a secure image URL.");
+
+export const landingPageSettingsSchema = z.object({
+  hero_eyebrow: z.string().trim().min(2).max(100),
+  hero_title: z.string().trim().min(2).max(160),
+  hero_description: z.string().trim().min(2).max(500),
+  hero_image: optionalImageSchema,
+  primary_cta_label: z.string().trim().min(2).max(60),
+  primary_cta_url: internalPathSchema,
+  secondary_cta_label: z.string().trim().min(2).max(60),
+  secondary_cta_url: internalPathSchema,
+  intro_heading: z.string().trim().min(2).max(120),
+  intro_content: z.string().trim().min(2).max(3000),
+  intro_image: optionalImageSchema,
+  intro_image_alt: z.string().trim().min(2).max(200),
+  show_announcement: z.boolean(),
+  show_intro: z.boolean(),
+  show_meeting: z.boolean(),
+  show_stories: z.boolean(),
+  show_updates: z.boolean(),
+  show_gallery: z.boolean(),
+  seo_title: z.string().trim().min(2).max(160),
+  seo_description: z.string().trim().min(2).max(320),
+  social_image: optionalImageSchema,
+});
+
 export const memberDetailsSchema = z.object({
   full_name: z.string().trim().min(2).max(160),
   program: z.string().trim().min(2).max(160),

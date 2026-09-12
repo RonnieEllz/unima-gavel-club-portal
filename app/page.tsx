@@ -5,15 +5,16 @@ import Footer from "@/components/Footer";
 import StoryCard from "@/components/StoryCard";
 import UpdateCard from "@/components/UpdateCard";
 import MeetingCard from "@/components/MeetingCard";
-import { getUpcomingMeeting, getLatestPosts, getGalleryPreview, getSiteAnnouncement } from "@/lib/data";
+import { getUpcomingMeeting, getLatestPosts, getGalleryPreview, getSiteAnnouncement, getLandingPageSettings } from "@/lib/data";
 
 export default async function LandingPage() {
-  const [meeting, stories, updates, gallery, announcement] = await Promise.all([
+  const [meeting, stories, updates, gallery, announcement, settings] = await Promise.all([
     getUpcomingMeeting(),
     getLatestPosts("story", 3),
     getLatestPosts("update", 3),
     getGalleryPreview(8),
     getSiteAnnouncement(),
+    getLandingPageSettings(),
   ]);
 
   return (
@@ -24,7 +25,7 @@ export default async function LandingPage() {
       <section className="relative overflow-hidden bg-maroon-800">
         <div className="absolute inset-0">
           <Image
-            src="https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=1600&q=80"
+            src={settings.hero_image || "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=1600&q=80"}
             alt="Students speaking in front of a room"
             fill
             priority
@@ -34,25 +35,24 @@ export default async function LandingPage() {
         </div>
         <div className="container-page relative py-24 text-center sm:py-32">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-gold-400">
-            University of Malawi
+            {settings.hero_eyebrow}
           </p>
           <h1 className="mt-4 font-display text-4xl font-bold text-white sm:text-5xl md:text-6xl">
-            UNIMA Gavel Club
+            {settings.hero_title}
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-maroon-50">
-            A student community focused on developing communication, public speaking,
-            leadership and confidence.
+            {settings.hero_description}
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-            <Link href="/join" className="btn-gold">
-              Join the Club
+            <Link href={settings.primary_cta_url} className="btn-gold">
+              {settings.primary_cta_label}
             </Link>
-            <Link href="/login" className="btn-secondary !border-white !bg-transparent !text-white hover:!bg-white/10">
-              Member Login
+            <Link href={settings.secondary_cta_url} className="btn-secondary !border-white !bg-transparent !text-white hover:!bg-white/10">
+              {settings.secondary_cta_label}
             </Link>
           </div>
 
-          {announcement && (
+          {settings.show_announcement && announcement && (
             <div className="mx-auto mt-8 max-w-2xl rounded-full border border-gold-200/50 bg-white/10 px-4 py-3 text-sm text-gold-100 shadow-lg backdrop-blur-sm">
               {announcement}
             </div>
@@ -61,34 +61,27 @@ export default async function LandingPage() {
       </section>
 
       {/* INTRO */}
-      <section className="container-page py-16">
+      {settings.show_intro && <section className="container-page py-16">
         <div className="grid gap-10 md:grid-cols-2 md:items-center">
           <div>
-            <h2 className="font-display text-3xl font-bold text-maroon-800">Who we are</h2>
-            <p className="mt-4 text-gray-600">
-              The UNIMA Gavel Club brings together students who want to become confident,
-              persuasive and thoughtful communicators. Through regular meetings, prepared
-              speeches, impromptu challenges and leadership roles, our members build the skills
-              that carry into classrooms, interviews and every room they will one day lead.
-            </p>
-            <p className="mt-4 text-gray-600">
-              Whether you are terrified of public speaking or already love the stage, there is a
-              place for you here.
-            </p>
+            <h2 className="font-display text-3xl font-bold text-maroon-800">{settings.intro_heading}</h2>
+            {settings.intro_content.split("\n\n").map((paragraph) => (
+              <p key={paragraph} className="mt-4 text-gray-600">{paragraph}</p>
+            ))}
           </div>
           <div className="relative h-72 overflow-hidden rounded-xl shadow-md">
             <Image
-              src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=1000&q=80"
-              alt="Students in discussion on campus"
+              src={settings.intro_image || "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=1000&q=80"}
+              alt={settings.intro_image_alt}
               fill
               className="object-cover"
             />
           </div>
         </div>
-      </section>
+      </section>}
 
       {/* UPCOMING MEETING */}
-      <section className="bg-maroon-50 py-16">
+      {settings.show_meeting && <section className="bg-maroon-50 py-16">
         <div className="container-page">
           <h2 className="font-display text-3xl font-bold text-maroon-800">Upcoming Meeting</h2>
           <div className="mt-6 max-w-2xl">
@@ -99,10 +92,10 @@ export default async function LandingPage() {
             )}
           </div>
         </div>
-      </section>
+      </section>}
 
       {/* LATEST STORIES */}
-      <section className="container-page py-16">
+      {settings.show_stories && <section className="container-page py-16">
         <div className="flex items-end justify-between">
           <h2 className="font-display text-3xl font-bold text-maroon-800">Latest Stories</h2>
           <Link href="/stories" className="text-sm font-semibold text-maroon-700 hover:underline">
@@ -118,10 +111,10 @@ export default async function LandingPage() {
         ) : (
           <p className="mt-6 text-gray-500">Stories from our members will appear here soon.</p>
         )}
-      </section>
+      </section>}
 
       {/* LATEST UPDATES */}
-      <section className="bg-gray-50 py-16">
+      {settings.show_updates && <section className="bg-gray-50 py-16">
         <div className="container-page">
           <div className="flex items-end justify-between">
             <h2 className="font-display text-3xl font-bold text-maroon-800">Latest Updates</h2>
@@ -139,10 +132,10 @@ export default async function LandingPage() {
             <p className="mt-6 text-gray-500">Club announcements will appear here soon.</p>
           )}
         </div>
-      </section>
+      </section>}
 
       {/* GALLERY */}
-      <section className="container-page py-16">
+      {settings.show_gallery && <section className="container-page py-16">
         <h2 className="font-display text-3xl font-bold text-maroon-800">Photo Gallery</h2>
         <p className="mt-2 text-gray-600">Moments from our meetings, trainings and events.</p>
         {gallery.length > 0 ? (
@@ -173,7 +166,7 @@ export default async function LandingPage() {
             ))}
           </div>
         )}
-      </section>
+      </section>}
 
       <Footer />
     </>

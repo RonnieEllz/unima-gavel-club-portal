@@ -1,5 +1,35 @@
 import { createClient } from "@/lib/supabase/server";
-import type { Meeting, Post, GalleryImage, Semester } from "@/types/database";
+import type { Meeting, Post, GalleryImage, Semester, LandingPageSettings } from "@/types/database";
+
+export const defaultLandingPageSettings: Omit<LandingPageSettings, "id" | "updated_by" | "updated_at"> = {
+  hero_eyebrow: "University of Malawi",
+  hero_title: "UNIMA Gavel Club",
+  hero_description: "A student community focused on developing communication, public speaking, leadership and confidence.",
+  hero_image: null,
+  primary_cta_label: "Join the Club",
+  primary_cta_url: "/join",
+  secondary_cta_label: "Member Login",
+  secondary_cta_url: "/login",
+  intro_heading: "Who we are",
+  intro_content: "The UNIMA Gavel Club brings together students who want to become confident, persuasive and thoughtful communicators. Through regular meetings, prepared speeches, impromptu challenges and leadership roles, our members build the skills that carry into classrooms, interviews and every room they will one day lead.\n\nWhether you are terrified of public speaking or already love the stage, there is a place for you here.",
+  intro_image: null,
+  intro_image_alt: "Students in discussion on campus",
+  show_announcement: true,
+  show_intro: true,
+  show_meeting: true,
+  show_stories: true,
+  show_updates: true,
+  show_gallery: true,
+  seo_title: "UNIMA Gavel Club | University of Malawi Toastmasters",
+  seo_description: "A student community at the University of Malawi focused on developing communication, public speaking, leadership and confidence.",
+  social_image: null,
+};
+
+export async function getLandingPageSettings(): Promise<typeof defaultLandingPageSettings> {
+  const supabase = createClient();
+  const { data } = await supabase.from("landing_page_settings").select("*").eq("id", true).maybeSingle();
+  return { ...defaultLandingPageSettings, ...(data ?? {}) };
+}
 
 export async function getActiveSemester(): Promise<Semester | null> {
   const supabase = createClient();

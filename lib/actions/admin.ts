@@ -9,6 +9,7 @@ import { canManageOperations, canManageSemesters } from "@/lib/role-policy";
 import { recordAuditEvent } from "@/lib/actions/audit";
 import {
   adminRoleSchema,
+  landingPageSettingsSchema,
   meetingSchema,
   memberDetailsSchema,
   postSchema,
@@ -829,7 +830,9 @@ export async function updateSiteAnnouncement(message: string) {
 
   const supabase = createClient();
   const auth = await getAuthContext();
-  if (!auth || !isSuperAdmin(auth.role)) return { error: "Only a Super Admin can update the site announcement." };
+  if (!auth || (auth.role !== "super_admin" && auth.role !== "administrator")) {
+    return { error: "Only an Administrator can update landing page settings." };
+  }
 
   const { data: previous } = await supabase
     .from("site_settings")
@@ -851,6 +854,60 @@ export async function updateSiteAnnouncement(message: string) {
     afterData: { value: trimmed },
   });
 
+  revalidatePath("/");
+  revalidatePath("/admin/settings");
+  return { success: true };
+}
+
+export async function updateLandingPageSettings(formData: FormData) {
+  const parsed = landingPageSettingsSchema.safeParse({
+    hero_eyebrow: String(formData.get("hero_eyebrow") ?? ""),
+    hero_title: String(formData.get("hero_title") ?? ""),
+    hero_description: String(formData.get("hero_description") ?? ""),
+    hero_image: String(formData.get("hero_image") ?? ""),
+    primary_cta_label: String(formData.get("primary_cta_label") ?? ""),
+    primary_cta_url: String(formData.get("primary_cta_url") ?? ""),
+    secondary_cta_label: String(formData.get("secondary_cta_label") ?? ""),
+    secondary_cta_url: String(formData.get("secondary_cta_url") ?? ""),
+    intro_heading: String(formData.get("intro_heading") ?? ""),
+    intro_content: String(formData.get("intro_content") ?? ""),
+    intro_image: String(formData.get("intro_image") ?? ""),
+    intro_image_alt: String(formData.get("intro_image_alt") ?? ""),
+    show_announcement: formData.get("show_announcement") === "on",
+    show_intro: formData.get("show_intro") === "on",
+    show_meeting: formData.get("show_meeting") === "on",
+    show_stories: formData.get("show_stories") === "on",
+    show_updates: formData.get("show_updates") === "on",
+    show_gallery: formData.get("show_gallery") === "on",
+    seo_title: String(formData.get("seo_title") ?? ""),
+    seo_description: String(formData.get("seo_description") ?? ""),
+    social_image: String(formData.get("social_image") ?? ""),
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid landing page settings." };
+
+  const supabase = createClient();
+  const auth = await getAuthContext();
+  if (!auth || (auth.role !== "super_admin" && auth.role !== "administrator")) {
+    return { error: "Only an Administrator can update landing page settings." };
+  }
+
+  const { data: previous } = await supabase
+    .from("landing_page_settings")
+    .select("*")
+    .eq("id", true)
+    .maybeSingle();
+  const { error } = await supabase
+    .from("landing_page_settings")
+    .upsert({ id: true, ...parsed.data, updated_by: auth.userId }, { onConflict: "id" });
+  if (error) return { error: error.message };
+
+  await recordAuditEvent({
+    action: "landing_page_settings_updated",
+    entityType: "landing_page_settings",
+    entityId: "default",
+    beforeData: previous,
+    afterData: parsed.data,
+  });
   revalidatePath("/");
   revalidatePath("/admin/settings");
   return { success: true };
