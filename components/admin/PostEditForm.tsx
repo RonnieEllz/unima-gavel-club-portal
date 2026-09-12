@@ -38,6 +38,13 @@ export default function PostEditForm({ post, postType }: { post: Post; postType:
         <label className="flex items-center gap-2 text-sm text-gray-700">
           <input type="checkbox" name="published" defaultChecked={post.published} /> Published
         </label>
+        <label className="flex items-center gap-2 text-sm text-gray-700">
+          <input type="checkbox" name="is_featured" defaultChecked={post.is_featured} /> Feature on the landing page
+        </label>
+        <div>
+          <label htmlFor={`featured_order_${post.id}`} className="label-field">Featured order</label>
+          <input id={`featured_order_${post.id}`} type="number" name="featured_order" min="0" max="10000" defaultValue={post.featured_order} className="input-field" />
+        </div>
         <div><SubmitButton /></div>
       </form>
     </details>

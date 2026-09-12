@@ -538,6 +538,8 @@ export async function createPost(
     cover_image: String(formData.get("cover_image") ?? ""),
     category: String(formData.get("category") ?? ""),
     author_name: String(formData.get("author_name") ?? ""),
+    is_featured: formData.get("is_featured") === "on",
+    featured_order: String(formData.get("featured_order") ?? "0"),
   });
   if (!parsedType.success || !parsed.success) return { error: "Please provide valid post details." };
 
@@ -556,6 +558,8 @@ export async function createPost(
     author_name: parsed.data.author_name || null,
     post_type: parsedType.data,
     published: formData.get("published") === "on",
+    is_featured: parsed.data.is_featured,
+    featured_order: parsed.data.is_featured ? parsed.data.featured_order : 0,
   }).select("id").single();
 
   if (error) return { error: error.message };
@@ -587,6 +591,8 @@ export async function updatePost(
     cover_image: String(formData.get("cover_image") ?? ""),
     category: String(formData.get("category") ?? ""),
     author_name: String(formData.get("author_name") ?? ""),
+    is_featured: formData.get("is_featured") === "on",
+    featured_order: String(formData.get("featured_order") ?? "0"),
   });
   if (!parsedPostId.success || !parsedType.success || !parsed.success) return { error: "Invalid post details." };
 
@@ -602,6 +608,8 @@ export async function updatePost(
     category: parsed.data.category || null,
     author_name: parsed.data.author_name || null,
     published: formData.get("published") === "on",
+    is_featured: parsed.data.is_featured,
+    featured_order: parsed.data.is_featured ? parsed.data.featured_order : 0,
   };
   const { error } = await supabase.from("posts").update(update).eq("id", parsedPostId.data);
   if (error) return { error: error.message };
@@ -671,9 +679,18 @@ export async function deletePost(postId: string, postType: PostType) {
 // (see app/admin/gallery/UploadForm.tsx); this action just records the
 // resulting public URL in the `gallery` table.
 // ---------------------------------------------------------------------------
-export async function addGalleryImage(imageUrl: string, caption: string, category: string) {
+export async function addGalleryImage(
+  imageUrl: string,
+  caption: string,
+  category: string,
+  isFeatured = false,
+  featuredOrder = 0
+) {
   const parsedUrl = z.string().url().safeParse(imageUrl);
-  if (!parsedUrl.success || caption.length > 500 || category.length > 100) return { error: "Invalid gallery details." };
+  const parsedOrder = z.coerce.number().int().min(0).max(10000).safeParse(featuredOrder);
+  if (!parsedUrl.success || !parsedOrder.success || caption.length > 500 || category.length > 100) {
+    return { error: "Invalid gallery details." };
+  }
 
   const supabase = createClient();
   const {
@@ -684,6 +701,8 @@ export async function addGalleryImage(imageUrl: string, caption: string, categor
     image_url: parsedUrl.data,
     caption,
     category,
+    is_featured: isFeatured,
+    featured_order: isFeatured ? parsedOrder.data : 0,
     uploaded_by: user?.id,
   }).select("id").single();
 
@@ -692,7 +711,7 @@ export async function addGalleryImage(imageUrl: string, caption: string, categor
     action: "gallery_image_added",
     entityType: "gallery",
     entityId: image.id,
-    afterData: { image_url: parsedUrl.data, caption, category },
+    afterData: { image_url: parsedUrl.data, caption, category, is_featured: isFeatured, featured_order: isFeatured ? parsedOrder.data : 0 },
   });
 
   revalidatePath("/admin/gallery");
@@ -700,11 +719,18 @@ export async function addGalleryImage(imageUrl: string, caption: string, categor
   return { success: true };
 }
 
-export async function updateGalleryImage(id: string, caption: string, category: string) {
+export async function updateGalleryImage(
+  id: string,
+  caption: string,
+  category: string,
+  isFeatured = false,
+  featuredOrder = 0
+) {
   const parsedId = uuidSchema.safeParse(id);
   const parsedCaption = z.string().max(500).safeParse(caption);
   const parsedCategory = z.string().max(100).safeParse(category);
-  if (!parsedId.success || !parsedCaption.success || !parsedCategory.success) {
+  const parsedOrder = z.coerce.number().int().min(0).max(10000).safeParse(featuredOrder);
+  if (!parsedId.success || !parsedCaption.success || !parsedCategory.success || !parsedOrder.success) {
     return { error: "Invalid gallery details." };
   }
 
@@ -715,6 +741,8 @@ export async function updateGalleryImage(id: string, caption: string, category: 
   const update = {
     caption: parsedCaption.data.trim() || null,
     category: parsedCategory.data.trim() || null,
+    is_featured: isFeatured,
+    featured_order: isFeatured ? parsedOrder.data : 0,
   };
   const { error } = await supabase.from("gallery").update(update).eq("id", parsedId.data);
   if (error) return { error: error.message };
@@ -865,10 +893,6 @@ export async function updateLandingPageSettings(formData: FormData) {
     hero_title: String(formData.get("hero_title") ?? ""),
     hero_description: String(formData.get("hero_description") ?? ""),
     hero_image: String(formData.get("hero_image") ?? ""),
-    primary_cta_label: String(formData.get("primary_cta_label") ?? ""),
-    primary_cta_url: String(formData.get("primary_cta_url") ?? ""),
-    secondary_cta_label: String(formData.get("secondary_cta_label") ?? ""),
-    secondary_cta_url: String(formData.get("secondary_cta_url") ?? ""),
     intro_heading: String(formData.get("intro_heading") ?? ""),
     intro_content: String(formData.get("intro_content") ?? ""),
     intro_image: String(formData.get("intro_image") ?? ""),

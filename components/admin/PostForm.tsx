@@ -120,6 +120,14 @@ export default function PostForm({ postType }: { postType: PostType }) {
       <label className="flex items-center gap-2 text-sm text-gray-700">
         <input type="checkbox" name="published" defaultChecked /> Publish immediately
       </label>
+      <label className="flex items-center gap-2 text-sm text-gray-700">
+        <input type="checkbox" name="is_featured" /> Feature on the landing page
+      </label>
+      <div>
+        <label htmlFor="featured_order" className="label-field">Featured order</label>
+        <input id="featured_order" type="number" name="featured_order" min="0" max="10000" defaultValue="0" className="input-field" />
+        <p className="mt-1 text-xs text-gray-500">Lower numbers appear first among featured content.</p>
+      </div>
       <div>
         <SubmitButton noun={noun} disabled={isUploadingCover} />
       </div>

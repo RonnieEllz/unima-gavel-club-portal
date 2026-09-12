@@ -32,12 +32,13 @@ export const postSchema = z.object({
     .or(z.literal("")),
   category: z.string().trim().max(100),
   author_name: z.string().trim().max(160),
+  is_featured: z.boolean(),
+  featured_order: z.coerce.number().int().min(0).max(10000),
 });
 
 export const postTypeSchema = z.enum(["story", "update"]);
 export const adminRoleSchema = z.enum(["super_admin", "administrator", "operations_admin", "content_administrator"]);
 
-const internalPathSchema = z.string().trim().regex(/^\/[A-Za-z0-9_/?=&%.-]*$/, "Use an internal site path.");
 const optionalImageSchema = z.string().trim().refine((value) => value === "" || isSafeImageUrl(value), "Use a secure image URL.");
 
 export const landingPageSettingsSchema = z.object({
@@ -45,10 +46,6 @@ export const landingPageSettingsSchema = z.object({
   hero_title: z.string().trim().min(2).max(160),
   hero_description: z.string().trim().min(2).max(500),
   hero_image: optionalImageSchema,
-  primary_cta_label: z.string().trim().min(2).max(60),
-  primary_cta_url: internalPathSchema,
-  secondary_cta_label: z.string().trim().min(2).max(60),
-  secondary_cta_url: internalPathSchema,
   intro_heading: z.string().trim().min(2).max(120),
   intro_content: z.string().trim().min(2).max(3000),
   intro_image: optionalImageSchema,

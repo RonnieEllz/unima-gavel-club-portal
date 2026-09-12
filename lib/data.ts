@@ -58,9 +58,11 @@ export async function getLatestPosts(type: "story" | "update", limit = 3): Promi
   const supabase = createClient();
   const { data } = await supabase
     .from("posts")
-    .select("id, title, short_description, cover_image, author_name, post_type, category, created_at")
+    .select("id, title, short_description, cover_image, author_name, post_type, category, is_featured, featured_order, created_at")
     .eq("post_type", type)
     .eq("published", true)
+    .order("is_featured", { ascending: false })
+    .order("featured_order", { ascending: true })
     .order("created_at", { ascending: false })
     .limit(limit);
   return (data as Post[]) ?? [];
@@ -70,7 +72,9 @@ export async function getGalleryPreview(limit = 8): Promise<GalleryImage[]> {
   const supabase = createClient();
   const { data } = await supabase
     .from("gallery")
-    .select("id, image_url, caption")
+    .select("id, image_url, caption, is_featured, featured_order")
+    .order("is_featured", { ascending: false })
+    .order("featured_order", { ascending: true })
     .order("created_at", { ascending: false })
     .limit(limit);
   return (data as GalleryImage[]) ?? [];

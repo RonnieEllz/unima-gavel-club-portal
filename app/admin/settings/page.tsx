@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { updateLandingPageSettings, updateSiteAnnouncement } from "@/lib/actions/admin";
 import { normalizeAnnouncementInput } from "@/lib/announcement";
 import { defaultLandingPageSettings } from "@/lib/data";
+import ImageUploadField from "@/components/admin/ImageUploadField";
 
 export default async function AdminSettingsPage() {
   const supabase = createClient();
@@ -35,7 +36,7 @@ export default async function AdminSettingsPage() {
     <div>
       <h1 className="font-display text-3xl font-bold text-maroon-800">Site Settings</h1>
       <p className="mt-2 text-gray-600">
-        Manage the public landing page copy, calls to action, images, visibility, and SEO.
+        Manage the public landing page copy, images, visibility, and SEO.
       </p>
 
       <form action={submitLandingSettings} className="card mt-6 grid gap-6 p-6">
@@ -44,20 +45,14 @@ export default async function AdminSettingsPage() {
           <input name="hero_eyebrow" defaultValue={values.hero_eyebrow} placeholder="Eyebrow" className="input-field" required />
           <input name="hero_title" defaultValue={values.hero_title} placeholder="Title" className="input-field" required />
           <textarea name="hero_description" defaultValue={values.hero_description} placeholder="Description" className="input-field" rows={3} required />
-          <input name="hero_image" defaultValue={values.hero_image ?? ""} placeholder="Hero image URL (optional)" className="input-field" />
-          <div className="grid gap-4 sm:grid-cols-2">
-            <input name="primary_cta_label" defaultValue={values.primary_cta_label} placeholder="Primary button label" className="input-field" required />
-            <input name="primary_cta_url" defaultValue={values.primary_cta_url} placeholder="Primary button path" className="input-field" required />
-            <input name="secondary_cta_label" defaultValue={values.secondary_cta_label} placeholder="Secondary button label" className="input-field" required />
-            <input name="secondary_cta_url" defaultValue={values.secondary_cta_url} placeholder="Secondary button path" className="input-field" required />
-          </div>
+          <ImageUploadField name="hero_image" label="Hero image" currentUrl={values.hero_image ?? ""} />
         </fieldset>
 
         <fieldset className="grid gap-4">
           <legend className="font-display text-xl font-bold text-maroon-800">Introduction</legend>
           <input name="intro_heading" defaultValue={values.intro_heading} placeholder="Heading" className="input-field" required />
           <textarea name="intro_content" defaultValue={values.intro_content} placeholder="Introduction copy" className="input-field" rows={7} required />
-          <input name="intro_image" defaultValue={values.intro_image ?? ""} placeholder="Introduction image URL (optional)" className="input-field" />
+          <ImageUploadField name="intro_image" label="Introduction image" currentUrl={values.intro_image ?? ""} />
           <input name="intro_image_alt" defaultValue={values.intro_image_alt} placeholder="Image description" className="input-field" required />
         </fieldset>
 
@@ -82,7 +77,7 @@ export default async function AdminSettingsPage() {
           <legend className="font-display text-xl font-bold text-maroon-800">SEO</legend>
           <input name="seo_title" defaultValue={values.seo_title} placeholder="SEO title" className="input-field" required />
           <textarea name="seo_description" defaultValue={values.seo_description} placeholder="SEO description" className="input-field" rows={3} required />
-          <input name="social_image" defaultValue={values.social_image ?? ""} placeholder="Social sharing image URL (optional)" className="input-field" />
+          <ImageUploadField name="social_image" label="Social sharing image" currentUrl={values.social_image ?? ""} />
         </fieldset>
 
         <div>

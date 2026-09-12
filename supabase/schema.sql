@@ -186,6 +186,8 @@
     post_type post_type not null,
     category text,
     published boolean not null default false,
+    is_featured boolean not null default false,
+    featured_order integer not null default 0 check (featured_order >= 0),
     created_at timestamptz not null default now(),
     updated_at timestamptz not null default now()
   );
@@ -200,6 +202,8 @@
     image_url text not null,
     caption text,
     category text,
+    is_featured boolean not null default false,
+    featured_order integer not null default 0 check (featured_order >= 0),
     uploaded_by uuid references auth.users(id),
     created_at timestamptz not null default now()
   );

@@ -17,6 +17,7 @@ async function count(table: string, match?: Record<string, unknown>) {
 export default async function AdminOverviewPage() {
   const { adminRole } = await getCurrentUserProfile();
   const isOperationsAdmin = adminRole === "operations_admin";
+  const canManageSemesters = adminRole === "super_admin" || adminRole === "administrator";
   const supabase = createClient();
 
   if (isOperationsAdmin) {
@@ -236,6 +237,13 @@ export default async function AdminOverviewPage() {
           </div>
         ))}
       </div>
+      {canManageSemesters && (
+        <div className="mt-8">
+          <Link href="/admin/semesters" className="btn-secondary !px-4 !py-2 text-sm">
+            Manage semesters
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

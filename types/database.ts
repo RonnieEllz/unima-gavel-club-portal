@@ -77,6 +77,8 @@ export interface Post {
   post_type: PostType;
   category: string | null;
   published: boolean;
+  is_featured: boolean;
+  featured_order: number;
   created_at: string;
   updated_at: string;
 }
@@ -86,6 +88,8 @@ export interface GalleryImage {
   image_url: string;
   caption: string | null;
   category: string | null;
+  is_featured: boolean;
+  featured_order: number;
   uploaded_by: string | null;
   created_at: string;
 }

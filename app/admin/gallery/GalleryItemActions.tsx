@@ -9,10 +9,14 @@ export default function GalleryItemActions({
   id,
   caption,
   category,
+  isFeatured,
+  featuredOrder,
 }: {
   id: string;
   caption: string | null;
   category: string | null;
+  isFeatured: boolean;
+  featuredOrder: number;
 }) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
@@ -36,7 +40,7 @@ export default function GalleryItemActions({
       Delete
     </button>
     {error && <p className="text-xs text-red-600">{error}</p>}
-    <GalleryEditForm id={id} caption={caption} category={category} />
+    <GalleryEditForm id={id} caption={caption} category={category} isFeatured={isFeatured} featuredOrder={featuredOrder} />
     </>
   );
 }

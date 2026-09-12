@@ -44,11 +44,11 @@ export default async function LandingPage() {
             {settings.hero_description}
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-            <Link href={settings.primary_cta_url} className="btn-gold">
-              {settings.primary_cta_label}
+            <Link href="/join" className="btn-gold">
+              Join the Club
             </Link>
-            <Link href={settings.secondary_cta_url} className="btn-secondary !border-white !bg-transparent !text-white hover:!bg-white/10">
-              {settings.secondary_cta_label}
+            <Link href="/login" className="btn-secondary !border-white !bg-transparent !text-white hover:!bg-white/10">
+              Member Login
             </Link>
           </div>
 
