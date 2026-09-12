@@ -47,3 +47,12 @@ export const memberDetailsSchema = z.object({
   learning_expectations: z.string().trim().max(5000),
   preferred_placement: z.string().trim().max(5000),
 });
+
+export const semesterSchema = z.object({
+  name: z.string().trim().min(2).max(160),
+  starts_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Enter a valid start date."),
+  ends_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Enter a valid end date."),
+}).refine((value) => value.ends_on >= value.starts_on, {
+  message: "The end date must be on or after the start date.",
+  path: ["ends_on"],
+});

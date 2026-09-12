@@ -10,6 +10,7 @@ const links = [
   { href: "/admin/stories", label: "Stories" },
   { href: "/admin/gallery", label: "Gallery" },
   { href: "/admin/reports", label: "Reports", operations: true },
+  { href: "/admin/semesters", label: "Semesters", semesterManagement: true },
   { href: "/admin/settings", label: "Settings" },
   { href: "/admin/audit", label: "Audit History" },
   { href: "/admin/administrators", label: "Administrators", superAdmin: true },
@@ -17,6 +18,7 @@ const links = [
 
 export default function AdminNavbar({ role }: { role: string | null }) {
   const canManageOperations = role === "super_admin" || role === "administrator" || role === "operations_admin";
+  const canManageSemesters = role === "super_admin" || role === "administrator";
   const isSuperAdmin = role === "super_admin";
   const canSeeGeneralAdminLinks = role !== "operations_admin";
 
@@ -37,12 +39,13 @@ export default function AdminNavbar({ role }: { role: string | null }) {
           {links
             .filter((link) => {
               if (link.superAdmin) return isSuperAdmin;
+              if (link.semesterManagement) return canManageSemesters;
               if (link.operations) return canManageOperations;
               return canSeeGeneralAdminLinks;
             })
             .map((l) => (
             <Link key={l.href} href={l.href} className="text-sm font-medium text-gray-300 hover:text-white">
-              {l.label}
+              {l.href === "/admin" && role === "operations_admin" ? "Operations Dashboard" : l.label}
             </Link>
             ))}
           <Link href="/dashboard" className="text-sm font-medium text-gold-400 hover:text-gold-300">

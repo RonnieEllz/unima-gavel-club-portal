@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { getCurrentUserProfile } from "@/lib/data";
+import { getActiveSemester } from "@/lib/data";
+import { calculateOperationalSummary } from "@/lib/operational-status";
 
 async function count(table: string, match?: Record<string, unknown>) {
   const supabase = createClient();
@@ -19,9 +21,10 @@ export default async function AdminOverviewPage() {
 
   if (isOperationsAdmin) {
     const today = new Date().toISOString().slice(0, 10);
-    const [{ count: pendingCount }, { data: pendingMembers }, { data: upcomingMeeting }, { count: activeCount }, { count: recentAttendance }, { data: recentMeetings }] = await Promise.all([
+    const activeSemester = await getActiveSemester();
+    const [{ count: pendingCount }, { data: pendingMembers }, { data: upcomingMeeting }, { data: operationalProfiles }, { data: allMeetings }, { data: allAttendance }, { count: recentAttendance }, { data: recentMeetings }] = await Promise.all([
       supabase.from("profiles").select("id", { count: "exact", head: true }).eq("membership_status", "pending"),
-      supabase.from("profiles").select("id, full_name, program, year_of_study").eq("membership_status", "pending").order("full_name").limit(5),
+      supabase.from("profiles").select("id, full_name, program, year_of_study, payment_verified").eq("membership_status", "pending").order("full_name").limit(5),
       supabase
         .from("meetings")
         .select("id, title, date, time, venue, attendance_open")
@@ -30,7 +33,11 @@ export default async function AdminOverviewPage() {
         .order("time", { ascending: true })
         .limit(1)
         .maybeSingle(),
-      supabase.from("profiles").select("id", { count: "exact", head: true }).eq("membership_status", "active"),
+      supabase.from("profiles").select("id, membership_status, membership_activated_at, payment_verified"),
+      activeSemester
+        ? supabase.from("meetings").select("id, date").eq("semester_id", activeSemester.id)
+        : supabase.from("meetings").select("id, date").eq("id", "00000000-0000-0000-0000-000000000000"),
+      supabase.from("attendance").select("member_id, meeting_id"),
       supabase.from("attendance").select("id", { count: "exact", head: true }).gte("checked_in_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
       supabase
         .from("meetings")
@@ -38,6 +45,15 @@ export default async function AdminOverviewPage() {
         .order("date", { ascending: false })
         .limit(5),
     ]);
+
+    const operationalSummaries = (operationalProfiles ?? []).map((member) => calculateOperationalSummary({
+      membershipStatus: member.membership_status,
+      membershipActivatedAt: member.membership_activated_at,
+      meetings: allMeetings ?? [],
+      attendedMeetingIds: (allAttendance ?? []).filter((record) => record.member_id === member.id).map((record) => record.meeting_id),
+    }));
+    const activeCount = operationalSummaries.filter((summary) => summary.status === "active").length;
+    const reviewCount = operationalSummaries.filter((summary) => summary.status === "review").length;
 
     const recentMeetingIds = (recentMeetings ?? []).map((meeting) => meeting.id);
     const attendanceCountsResult = recentMeetingIds.length
@@ -77,6 +93,7 @@ export default async function AdminOverviewPage() {
           {[
             ["Pending approvals", pendingCount ?? 0, "/admin/members?status=pending"],
             ["Active members", activeCount ?? 0, "/admin/members?status=active"],
+            ["Needs review", reviewCount, "/admin/members"],
             ["Recent check-ins", recentAttendance ?? 0, "/admin/attendance"],
             ["Upcoming meeting", upcomingMeeting ? "Scheduled" : "None", "/admin/meetings"],
           ].map(([label, value, href]) => (
@@ -140,7 +157,7 @@ export default async function AdminOverviewPage() {
                     {pendingMembers.map((member) => (
                       <div key={member.id} className="flex items-center justify-between gap-3 text-sm text-gray-700">
                         <span>{member.full_name}</span>
-                        <span className="text-gray-500">{member.program} · Yr {member.year_of_study}</span>
+                        <span className="text-right text-gray-500">{member.program} · Yr {member.year_of_study}<br />{member.payment_verified ? "Paid" : "Unpaid"}</span>
                       </div>
                     ))}
                   </div>

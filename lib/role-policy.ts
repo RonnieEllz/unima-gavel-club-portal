@@ -4,6 +4,10 @@ export function canManageOperations(role: AdminRoleName | null) {
   return role === "super_admin" || role === "administrator" || role === "operations_admin";
 }
 
+export function canManageSemesters(role: AdminRoleName | null) {
+  return role === "super_admin" || role === "administrator";
+}
+
 export function hasContentAccess(role: AdminRoleName | null) {
   return role === "super_admin" || role === "administrator" || role === "content_administrator";
 }
@@ -16,6 +20,7 @@ export function canAccessAdminPath(role: AdminRoleName | null, pathname: string)
   if (!role) return false;
   if (pathname === "/admin" || pathname === "/admin/") return true;
   if (pathname.startsWith("/admin/administrators")) return isSuperAdmin(role);
+  if (pathname.startsWith("/admin/semesters")) return canManageSemesters(role);
   if (
     pathname.startsWith("/admin/members") ||
     pathname.startsWith("/admin/meetings") ||

@@ -21,7 +21,7 @@
   -- ---------------------------------------------------------------------------
   do $$
   begin
-    create type membership_status as enum ('pending', 'active', 'inactive', 'rejected');
+    create type membership_status as enum ('pending', 'active', 'inactive', 'rejected', 'alumni');
   exception
     when duplicate_object then null;
   end $$;
@@ -70,12 +70,44 @@
     learning_expectations text,
     preferred_placement text,
     membership_status membership_status not null default 'pending',
+    membership_activated_at timestamptz,
+    payment_verified boolean not null default false,
+    last_payment_date timestamptz,
     avatar_url text,
     created_at timestamptz not null default now(),
     updated_at timestamptz not null default now()
   );
 
   comment on table profiles is 'One row per member, keyed 1:1 to auth.users.';
+
+  create table if not exists semesters (
+    id uuid primary key default uuid_generate_v4(),
+    name text not null check (length(trim(name)) between 2 and 160),
+    starts_on date not null,
+    ends_on date not null,
+    is_active boolean not null default false,
+    completed_at timestamptz,
+    completed_by uuid references auth.users(id),
+    created_at timestamptz not null default now(),
+    check (ends_on >= starts_on)
+  );
+
+  create unique index if not exists semesters_one_active_idx on semesters (is_active) where is_active;
+
+  create table if not exists member_progressions (
+    id uuid primary key default uuid_generate_v4(),
+    member_id uuid not null references profiles(id) on delete cascade,
+    semester_id uuid not null references semesters(id) on delete restrict,
+    previous_year smallint not null check (previous_year between 1 and 6),
+    next_year smallint check (next_year between 1 and 6),
+    previous_status membership_status not null,
+    next_status membership_status not null,
+    processed_by uuid references auth.users(id),
+    created_at timestamptz not null default now(),
+    unique (member_id, semester_id)
+  );
+
+  create index if not exists member_progressions_member_idx on member_progressions(member_id, created_at desc);
 
   -- ---------------------------------------------------------------------------
   -- ADMIN ROLES
@@ -119,6 +151,7 @@
     venue text not null,
     description text,
     attendance_open boolean not null default false,
+    semester_id uuid references semesters(id) on delete restrict,
     created_by uuid references auth.users(id),
     created_at timestamptz not null default now()
   );
@@ -288,6 +321,11 @@
       where user_id = auth.uid()
         and role in ('super_admin', 'administrator')
     );
+  $$ language sql security definer set search_path = public stable;
+
+  create or replace function can_manage_semesters()
+  returns boolean as $$
+    select can_manage_settings();
   $$ language sql security definer set search_path = public stable;
 
   create or replace function can_view_audit()

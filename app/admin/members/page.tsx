@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
+import { calculateOperationalSummary } from "@/lib/operational-status";
+import { getActiveSemester } from "@/lib/data";
 import type { Profile } from "@/types/database";
 import BulkMemberStatusForm from "./BulkMemberStatusForm";
 
@@ -9,12 +11,13 @@ export default async function AdminMembersPage({
 }) {
   const pageSize = 25;
   const supabase = createClient();
+  const activeSemester = await getActiveSemester();
   let query = supabase.from("profiles").select("*", { count: "exact" }).order("created_at", { ascending: false });
   const searchTerm = searchParams.q?.trim().replace(/[(),.]/g, " ").slice(0, 100);
   const programFilter = searchParams.program?.trim().slice(0, 80);
   const year = Number(searchParams.year);
   const sex = searchParams.sex === "male" || searchParams.sex === "female" ? searchParams.sex : "";
-  const status = ["pending", "active", "inactive", "rejected"].includes(searchParams.status ?? "") ? searchParams.status! : "";
+  const status = ["pending", "active", "inactive", "rejected", "alumni"].includes(searchParams.status ?? "") ? searchParams.status! : "";
   const requestedPage = Number.parseInt(searchParams.page ?? "1", 10);
   const page = Number.isFinite(requestedPage) ? Math.min(Math.max(requestedPage, 1), 1000) : 1;
 
@@ -38,6 +41,24 @@ export default async function AdminMembersPage({
 
   const { data: members, count } = await query.range((page - 1) * pageSize, page * pageSize - 1);
   const memberList = (members as Profile[] | null) ?? [];
+  const memberIds = memberList.map((member) => member.id);
+  const [{ data: meetings }, { data: attendance }] = memberIds.length && activeSemester
+    ? await Promise.all([
+        supabase.from("meetings").select("id, date").eq("semester_id", activeSemester.id),
+        supabase.from("attendance").select("member_id, meeting_id").in("member_id", memberIds),
+      ])
+    : [{ data: [] as { id: string; date: string }[] }, { data: [] as { member_id: string; meeting_id: string }[] }];
+  const operationalMembers = memberList.map((member) => ({
+    ...member,
+    operationalSummary: calculateOperationalSummary({
+      membershipStatus: member.membership_status,
+      membershipActivatedAt: member.membership_activated_at,
+      meetings: meetings ?? [],
+      attendedMeetingIds: (attendance ?? [])
+        .filter((record) => record.member_id === member.id)
+        .map((record) => record.meeting_id),
+    }),
+  }));
   const totalPages = Math.max(1, Math.ceil((count ?? 0) / pageSize));
   const filterParams = new URLSearchParams();
   if (searchTerm) filterParams.set("q", searchTerm);
@@ -92,6 +113,7 @@ export default async function AdminMembersPage({
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
           <option value="rejected">Rejected</option>
+          <option value="alumni">Alumni</option>
         </select>
         <button className="btn-secondary !px-4 !py-2 text-sm">Filter</button>
         <a href="/admin/members" className="self-center text-sm font-semibold text-gray-500 hover:text-maroon-700">
@@ -100,7 +122,7 @@ export default async function AdminMembersPage({
       </form>
 
       {memberList.length > 0 ? (
-        <BulkMemberStatusForm members={memberList} />
+        <BulkMemberStatusForm members={operationalMembers} />
       ) : (
         <div className="card mt-6 px-4 py-10 text-center text-gray-500">No members found.</div>
       )}

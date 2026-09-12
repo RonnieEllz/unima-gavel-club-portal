@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import ProfileForm from "./ProfileForm";
 import { canManageOperations } from "@/lib/role-policy";
+import { getMemberAttendanceHistory, getActiveSemesterMeetings } from "@/lib/data";
+import { calculateOperationalSummary } from "@/lib/operational-status";
 import type { Profile } from "@/types/database";
 
 export default async function ProfilePage() {
@@ -20,6 +22,19 @@ export default async function ProfilePage() {
   const profile = profileData as Profile | null;
 
   if (!profile) return null;
+
+  const [history, semesterMeetings] = await Promise.all([
+    getMemberAttendanceHistory(user.id),
+    getActiveSemesterMeetings(),
+  ]);
+  const operationalSummary = profile.membership_status === "active"
+    ? calculateOperationalSummary({
+        membershipStatus: profile.membership_status,
+        membershipActivatedAt: profile.membership_activated_at,
+        meetings: semesterMeetings,
+        attendedMeetingIds: history.map((record) => record.meeting_id),
+      })
+    : null;
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -44,6 +59,24 @@ export default async function ProfilePage() {
         <div>
           <p className="text-gray-400">Membership Status</p>
           <p className="font-medium capitalize text-gray-800">{profile.membership_status}</p>
+        </div>
+        {operationalSummary && (
+          <div>
+            <p className="text-gray-400">Operational Status</p>
+            <p className="font-medium capitalize text-gray-800">
+              {operationalSummary.status === "review" ? "Review required" : operationalSummary.status}
+            </p>
+            <p className="mt-1 text-xs text-gray-500">{operationalSummary.attendedCount} attended · {operationalSummary.missedCount} missed this semester</p>
+          </div>
+        )}
+        <div>
+          <p className="text-gray-400">Membership Payment</p>
+          <p className={`font-medium ${profile.payment_verified ? "text-green-700" : "text-gray-600"}`}>
+            {profile.payment_verified ? "Paid" : "Unpaid"}
+          </p>
+          {profile.last_payment_date && (
+            <p className="mt-1 text-xs text-gray-500">Last payment: {new Date(profile.last_payment_date).toLocaleDateString()}</p>
+          )}
         </div>
       </div>
 

@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { MembershipStatus, PostType, AdminRoleName } from "@/types/database";
 import { getAuthContext, isSuperAdmin } from "@/lib/authz";
-import { canManageOperations } from "@/lib/role-policy";
+import { canManageOperations, canManageSemesters } from "@/lib/role-policy";
 import { recordAuditEvent } from "@/lib/actions/audit";
 import {
   adminRoleSchema,
@@ -13,6 +13,7 @@ import {
   memberDetailsSchema,
   postSchema,
   postTypeSchema,
+  semesterSchema,
   uuidSchema,
 } from "@/lib/validation";
 
@@ -20,6 +21,169 @@ import {
 // has_content_access()) as the real authorization check. If the calling user
 // lacks the right role, Supabase returns an error and nothing is written.
 // these actions do not themselves decide who is allowed to do what.
+
+// ---------------------------------------------------------------------------
+// MEMBERS
+// ---------------------------------------------------------------------------
+export async function createSemester(formData: FormData) {
+  const parsed = semesterSchema.safeParse({
+    name: String(formData.get("name") ?? ""),
+    starts_on: String(formData.get("starts_on") ?? ""),
+    ends_on: String(formData.get("ends_on") ?? ""),
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid semester." };
+
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "You must be logged in." };
+  const { data: role } = await supabase.from("admin_roles").select("role").eq("user_id", user.id).maybeSingle();
+  if (!role || !canManageSemesters(role.role as AdminRoleName)) return { error: "Only an administrator can manage semesters." };
+
+  const { data: semester, error } = await supabase.from("semesters").insert({ ...parsed.data, is_active: false }).select("id").single();
+  if (error) return { error: error.message };
+  await recordAuditEvent({ action: "semester_created", entityType: "semester", entityId: semester.id, afterData: parsed.data });
+  revalidatePath("/admin/semesters");
+  return { success: true };
+}
+
+export async function activateSemester(semesterId: string) {
+  const parsedId = uuidSchema.safeParse(semesterId);
+  if (!parsedId.success) return { error: "Invalid semester." };
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "You must be logged in." };
+  const { data: role } = await supabase.from("admin_roles").select("role").eq("user_id", user.id).maybeSingle();
+  if (!role || !canManageSemesters(role.role as AdminRoleName)) return { error: "Only an administrator can manage semesters." };
+
+  const { data: previous } = await supabase.from("semesters").select("id, is_active").eq("is_active", true).maybeSingle();
+  const { error: deactivateError } = await supabase.from("semesters").update({ is_active: false }).eq("is_active", true);
+  if (deactivateError) return { error: deactivateError.message };
+  const { error } = await supabase.from("semesters").update({ is_active: true }).eq("id", parsedId.data);
+  if (error) return { error: error.message };
+  await recordAuditEvent({ action: "semester_activated", entityType: "semester", entityId: parsedId.data, beforeData: previous, afterData: { is_active: true } });
+  revalidatePath("/admin/semesters");
+  revalidatePath("/admin/members");
+  revalidatePath("/admin/reports");
+  revalidatePath("/admin");
+  revalidatePath("/dashboard");
+  return { success: true };
+}
+
+export async function completeSemester(semesterId: string, password: string) {
+  const parsedId = uuidSchema.safeParse(semesterId);
+  const parsedPassword = z.string().min(8, "Enter your current password to close this semester.").safeParse(password);
+  if (!parsedId.success) return { error: "Invalid semester." };
+  if (!parsedPassword.success) return { error: parsedPassword.error.issues[0]?.message ?? "Invalid password." };
+
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "You must be logged in." };
+  const { data: role } = await supabase.from("admin_roles").select("role").eq("user_id", user.id).maybeSingle();
+  if (!role || !canManageSemesters(role.role as AdminRoleName)) return { error: "Only an administrator can complete semesters." };
+  if (!(await confirmCurrentPassword(supabase, { userId: user.id }, parsedPassword.data))) {
+    return { error: "Password confirmation failed. The semester was not closed." };
+  }
+
+  const { data: semester, error: semesterError } = await supabase
+    .from("semesters")
+    .select("id, name, starts_on, ends_on, is_active, completed_at")
+    .eq("id", parsedId.data)
+    .maybeSingle();
+  if (semesterError) return { error: semesterError.message };
+  if (!semester) return { error: "Semester not found." };
+  if (semester.completed_at) return { error: "This semester has already been completed." };
+  if (semester.ends_on >= new Date().toISOString().slice(0, 10)) return { error: "A semester can only be completed after its end date." };
+
+  const { data: members, error: membersError } = await supabase
+    .from("profiles")
+    .select("id, year_of_study, membership_status, membership_activated_at")
+    .in("membership_status", ["active", "inactive"]);
+  if (membersError) return { error: membersError.message };
+
+  const { data: completedSemesters, error: completedError } = await supabase
+    .from("semesters")
+    .select("id, starts_on, ends_on")
+    .not("completed_at", "is", null)
+    .lte("ends_on", semester.ends_on)
+    .order("ends_on", { ascending: true });
+  if (completedError) return { error: completedError.message };
+
+  const completedWithCurrent = [...(completedSemesters ?? []), {
+    id: semester.id,
+    starts_on: semester.starts_on,
+    ends_on: semester.ends_on,
+  }];
+  const { data: existingProgressions, error: progressionError } = await supabase
+    .from("member_progressions")
+    .select("member_id, semester_id")
+    .in("member_id", (members ?? []).map((member) => member.id));
+  if (progressionError) return { error: progressionError.message };
+
+  const progressionCounts = new Map<string, number>();
+  for (const progression of existingProgressions ?? []) {
+    progressionCounts.set(progression.member_id, (progressionCounts.get(progression.member_id) ?? 0) + 1);
+  }
+
+  let progressed = 0;
+  for (const member of members ?? []) {
+    const activationDate = member.membership_activated_at?.slice(0, 10);
+    const eligibleSemesterCount = completedWithCurrent.filter((item) => !activationDate || item.ends_on >= activationDate).length;
+    const targetProgressions = Math.floor(eligibleSemesterCount / 2);
+    const currentProgressions = progressionCounts.get(member.id) ?? 0;
+    if (targetProgressions <= currentProgressions) continue;
+
+    const nextStatus = member.year_of_study >= 4 ? "alumni" : member.membership_status;
+    const nextYear = member.year_of_study >= 4 ? null : member.year_of_study + 1;
+    const { error: insertError } = await supabase.from("member_progressions").insert({
+      member_id: member.id,
+      semester_id: semester.id,
+      previous_year: member.year_of_study,
+      next_year: nextYear,
+      previous_status: member.membership_status,
+      next_status: nextStatus,
+      processed_by: user.id,
+    });
+    if (insertError) {
+      if (insertError.code === "23505") continue;
+      return { error: insertError.message };
+    }
+
+    const { error: updateError } = await supabase.from("profiles").update({
+      year_of_study: nextYear ?? member.year_of_study,
+      membership_status: nextStatus,
+    }).eq("id", member.id);
+    if (updateError) return { error: updateError.message };
+    await recordAuditEvent({
+      action: "member_progressed",
+      entityType: "profile",
+      entityId: member.id,
+      beforeData: { year_of_study: member.year_of_study, membership_status: member.membership_status },
+      afterData: { year_of_study: nextYear, membership_status: nextStatus, semester_id: semester.id },
+    });
+    progressed += 1;
+  }
+
+  const completedAt = new Date().toISOString();
+  const { error: completeError } = await supabase.from("semesters").update({
+    completed_at: completedAt,
+    completed_by: user.id,
+    is_active: false,
+  }).eq("id", semester.id);
+  if (completeError) return { error: completeError.message };
+  await recordAuditEvent({
+    action: "semester_completed",
+    entityType: "semester",
+    entityId: semester.id,
+    afterData: { completed_at: completedAt, progressed_members: progressed },
+  });
+
+  revalidatePath("/admin/semesters");
+  revalidatePath("/admin/members");
+  revalidatePath("/admin/reports");
+  revalidatePath("/admin");
+  revalidatePath("/dashboard");
+  return { success: true, progressed };
+}
 
 // ---------------------------------------------------------------------------
 // MEMBERS
@@ -81,6 +245,57 @@ export async function updateMemberDetails(memberId: string, formData: FormData) 
   return { success: true };
 }
 
+export async function setMemberPaymentStatus(memberId: string, paid: boolean) {
+  const parsedMemberId = uuidSchema.safeParse(memberId);
+  if (!parsedMemberId.success) return { error: "Invalid member." };
+  if (typeof paid !== "boolean") return { error: "Invalid payment status." };
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "You must be logged in." };
+
+  const { data: adminRole } = await supabase
+    .from("admin_roles")
+    .select("role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!adminRole || !canManageOperations(adminRole.role as AdminRoleName)) {
+    return { error: "Only an operations administrator can update payment status." };
+  }
+
+  const { data: previous, error: previousError } = await supabase
+    .from("profiles")
+    .select("payment_verified, last_payment_date")
+    .eq("id", parsedMemberId.data)
+    .maybeSingle();
+  if (previousError) return { error: `Unable to read payment status: ${previousError.message}` };
+  if (!previous) return { error: "Member not found." };
+
+  const nextPaymentDate = paid ? new Date().toISOString() : null;
+  const { error } = await supabase
+    .from("profiles")
+    .update({ payment_verified: paid, last_payment_date: nextPaymentDate })
+    .eq("id", parsedMemberId.data);
+  if (error) return { error: `Unable to update payment status: ${error.message}` };
+
+  await recordAuditEvent({
+    action: "member_payment_status_changed",
+    entityType: "profile",
+    entityId: parsedMemberId.data,
+    beforeData: previous,
+    afterData: { payment_verified: paid, last_payment_date: nextPaymentDate },
+  });
+
+  revalidatePath("/admin/members");
+  revalidatePath("/admin/reports");
+  revalidatePath("/admin");
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/profile");
+  return { success: true };
+}
+
 export async function setMembershipStatus(memberId: string, status: MembershipStatus) {
   const parsedMemberId = uuidSchema.safeParse(memberId);
   if (!parsedMemberId.success) return { error: "Invalid member." };
@@ -88,20 +303,26 @@ export async function setMembershipStatus(memberId: string, status: MembershipSt
   const supabase = createClient();
   const { data: previous } = await supabase
     .from("profiles")
-    .select("membership_status")
+    .select("membership_status, membership_activated_at")
     .eq("id", parsedMemberId.data)
     .maybeSingle();
   if (!previous) return { error: "Member not found." };
 
-  const { error } = await supabase.from("profiles").update({ membership_status: status }).eq("id", parsedMemberId.data);
+  const activationDate = status === "active"
+    ? previous.membership_activated_at ?? new Date().toISOString()
+    : previous.membership_activated_at;
+  const { error } = await supabase
+    .from("profiles")
+    .update({ membership_status: status, membership_activated_at: activationDate })
+    .eq("id", parsedMemberId.data);
   if (error) return { error: error.message };
 
   await recordAuditEvent({
     action: "membership_status_changed",
     entityType: "profile",
     entityId: parsedMemberId.data,
-    beforeData: { membership_status: previous.membership_status },
-    afterData: { membership_status: status },
+    beforeData: previous,
+    afterData: { membership_status: status, membership_activated_at: activationDate },
   });
 
   revalidatePath("/admin/members");
@@ -121,21 +342,18 @@ export async function bulkSetMembershipStatus(memberIds: string[], status: Membe
   const supabase = createClient();
   const { data: members, error: selectError } = await supabase
     .from("profiles")
-    .select("id, membership_status")
+    .select("id, membership_status, membership_activated_at")
     .in("id", normalizedIds);
 
   if (selectError) return { error: selectError.message };
 
   if (!members || members.length === 0) return { error: "No matching members found." };
 
-  const beforeData = members.map((member) => ({
-    id: member.id,
-    membership_status: member.membership_status,
-  }));
+  const activationDate = status === "active" ? new Date().toISOString() : null;
 
   const { error } = await supabase
     .from("profiles")
-    .update({ membership_status: status })
+    .update({ membership_status: status, membership_activated_at: status === "active" ? activationDate : null })
     .in("id", normalizedIds);
 
   if (error) return { error: error.message };
@@ -145,8 +363,8 @@ export async function bulkSetMembershipStatus(memberIds: string[], status: Membe
       action: "membership_status_changed",
       entityType: "profile",
       entityId: member.id,
-      beforeData: { membership_status: member.membership_status },
-      afterData: { membership_status: status },
+      beforeData: { membership_status: member.membership_status, membership_activated_at: member.membership_activated_at },
+      afterData: { membership_status: status, membership_activated_at: status === "active" ? activationDate : null },
       reason: "bulk_member_status_update",
     });
   }
@@ -159,6 +377,19 @@ export async function bulkSetMembershipStatus(memberIds: string[], status: Membe
 // MEETINGS
 // ---------------------------------------------------------------------------
 export type MeetingFormState = { error?: string; success?: boolean };
+
+async function findMeetingSemester(date: string) {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("semesters")
+    .select("id")
+    .lte("starts_on", date)
+    .gte("ends_on", date);
+  if (error) return { error: `Unable to find a semester for this meeting: ${error.message}` };
+  if (!data || data.length === 0) return { error: "Create or activate a semester that includes this meeting date first." };
+  if (data.length > 1) return { error: "This meeting date falls into overlapping semesters. Fix the semester dates first." };
+  return { semesterId: data[0].id };
+}
 
 export async function createMeeting(
   _previousState: MeetingFormState,
@@ -173,6 +404,9 @@ export async function createMeeting(
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid meeting details." };
 
+  const semester = await findMeetingSemester(parsed.data.date);
+  if (semester.error) return { error: semester.error };
+
   const supabase = createClient();
   const {
     data: { user },
@@ -180,6 +414,7 @@ export async function createMeeting(
 
   const { data: meeting, error } = await supabase.from("meetings").insert({
     ...parsed.data,
+    semester_id: semester.semesterId,
     created_by: user?.id,
   }).select("id").single();
 
@@ -211,11 +446,14 @@ export async function updateMeeting(
   });
   if (!parsedMeetingId.success || !parsed.success) return { error: "Invalid meeting details." };
 
+  const semester = await findMeetingSemester(parsed.data.date);
+  if (semester.error) return { error: semester.error };
+
   const supabase = createClient();
   const { data: previous } = await supabase.from("meetings").select("*").eq("id", parsedMeetingId.data).maybeSingle();
   if (!previous) return { error: "Meeting not found." };
 
-  const { error } = await supabase.from("meetings").update(parsed.data).eq("id", parsedMeetingId.data);
+  const { error } = await supabase.from("meetings").update({ ...parsed.data, semester_id: semester.semesterId }).eq("id", parsedMeetingId.data);
   if (error) return { error: error.message };
   await recordAuditEvent({
     action: "meeting_updated",
@@ -516,7 +754,7 @@ export async function deleteGalleryImage(id: string) {
 // ---------------------------------------------------------------------------
 // ADMINISTRATORS (super admin only, enforced by RLS on admin_roles)
 // ---------------------------------------------------------------------------
-async function confirmSuperAdminPassword(
+async function confirmCurrentPassword(
   supabase: ReturnType<typeof createClient>,
   auth: { userId: string },
   password: string
@@ -547,7 +785,7 @@ export async function addAdministratorById(userId: string, role: AdminRoleName, 
   const auth = await getAuthContext();
   if (!auth || !isSuperAdmin(auth.role)) return { error: "Only a Super Admin can manage administrators." };
 
-  if (!(await confirmSuperAdminPassword(supabase, auth, parsedPassword.data))) {
+  if (!(await confirmCurrentPassword(supabase, auth, parsedPassword.data))) {
     return { error: "Password confirmation failed. No administrator access was changed." };
   }
 
@@ -628,7 +866,7 @@ export async function removeAdministrator(userId: string, password: string) {
   const auth = await getAuthContext();
   if (!auth || !isSuperAdmin(auth.role)) return { error: "Only a Super Admin can manage administrators." };
   if (parsedUserId.data === auth.userId) return { error: "You cannot remove your own administrator access." };
-  if (!(await confirmSuperAdminPassword(supabase, auth, parsedPassword.data))) {
+  if (!(await confirmCurrentPassword(supabase, auth, parsedPassword.data))) {
     return { error: "Password confirmation failed. No administrator access was changed." };
   }
 

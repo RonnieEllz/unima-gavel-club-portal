@@ -12,6 +12,8 @@ alter table posts enable row level security;
 alter table gallery enable row level security;
 alter table site_settings enable row level security;
 alter table audit_logs enable row level security;
+alter table semesters enable row level security;
+alter table member_progressions enable row level security;
 
 -- CREATE POLICY has no IF NOT EXISTS form. Remove this script's policies so
 -- the file can safely be rerun during setup or policy changes.
@@ -56,6 +58,12 @@ drop policy if exists "audit_logs_select_admin" on audit_logs;
 drop policy if exists "audit_logs_insert_none" on audit_logs;
 drop policy if exists "audit_logs_update_none" on audit_logs;
 drop policy if exists "audit_logs_delete_none" on audit_logs;
+drop policy if exists "semesters_select_operations" on semesters;
+drop policy if exists "semesters_insert_operations" on semesters;
+drop policy if exists "semesters_update_operations" on semesters;
+drop policy if exists "semesters_delete_operations" on semesters;
+drop policy if exists "member_progressions_select_operations" on member_progressions;
+drop policy if exists "member_progressions_insert_operations" on member_progressions;
 
 -- ---------------------------------------------------------------------------
 -- PROFILES
@@ -82,6 +90,31 @@ create policy "profiles_update_admin"
   using (can_manage_operations())
   with check (can_manage_operations());
 
+create policy "semesters_select_operations"
+  on semesters for select
+  using (can_manage_operations());
+
+create policy "semesters_insert_operations"
+  on semesters for insert
+  with check (can_manage_semesters());
+
+create policy "semesters_update_operations"
+  on semesters for update
+  using (can_manage_semesters())
+  with check (can_manage_semesters());
+
+create policy "semesters_delete_operations"
+  on semesters for delete
+  using (can_manage_semesters());
+
+create policy "member_progressions_select_operations"
+  on member_progressions for select
+  using (can_manage_semesters());
+
+create policy "member_progressions_insert_operations"
+  on member_progressions for insert
+  with check (can_manage_semesters());
+
 -- Note: profiles_update_own lets a member update the whole row at the
 -- Postgres layer. Membership_status, program, year etc. that members
 -- should NOT self-edit are protected at the APPLICATION layer: the member
@@ -101,9 +134,12 @@ begin
        or new.learning_expectations is distinct from old.learning_expectations
        or new.preferred_placement is distinct from old.preferred_placement
        or new.membership_status is distinct from old.membership_status
+      or new.membership_activated_at is distinct from old.membership_activated_at
+      or new.year_of_study is distinct from old.year_of_study
+      or new.payment_verified is distinct from old.payment_verified
+      or new.last_payment_date is distinct from old.last_payment_date
        or new.full_name is distinct from old.full_name
        or new.program is distinct from old.program
-       or new.year_of_study is distinct from old.year_of_study
        or new.sex is distinct from old.sex then
       raise exception 'Members cannot edit this field. Contact an administrator.';
     end if;

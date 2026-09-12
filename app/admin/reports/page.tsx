@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { calculateOperationalSummary } from "@/lib/operational-status";
+import { getActiveSemester } from "@/lib/data";
 import ReportTools from "./ReportTools";
 
 const validDate = (value?: string) => value && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : "";
@@ -21,13 +23,14 @@ export default async function AdminReportsPage({
   const q = searchParams.q?.trim().slice(0, 100) ?? "";
   const invalidRange = Boolean(from && to && from > to);
   const supabase = createClient();
+  const activeSemester = await getActiveSemester();
   let meetings: { id: string; title: string; date: string; time: string; venue: string }[] = [];
   let attendance: { id: string; meeting_id: string; member_id: string; checked_in_at: string }[] = [];
-  let eligibleMembers: { id: string }[] = [];
+  let eligibleMembers: { id: string; membership_activated_at: string | null; payment_verified: boolean }[] = [];
   let error = false;
 
   if (!invalidRange) {
-    let membersQuery = supabase.from("profiles").select("id").eq("membership_status", "active");
+    let membersQuery = supabase.from("profiles").select("id, membership_activated_at, payment_verified").eq("membership_status", "active");
     if (program) membersQuery = membersQuery.ilike("program", `%${program}%`);
     if (Number.isInteger(year) && year >= 1 && year <= 5) membersQuery = membersQuery.eq("year_of_study", year);
     const membersResult = await membersQuery;
@@ -39,6 +42,8 @@ export default async function AdminReportsPage({
       .select("id, title, date, time, venue")
       .order("date", { ascending: false })
       .order("time", { ascending: false });
+    if (activeSemester) meetingsQuery = meetingsQuery.eq("semester_id", activeSemester.id);
+    else meetingsQuery = meetingsQuery.eq("id", "00000000-0000-0000-0000-000000000000");
     if (from) meetingsQuery = meetingsQuery.gte("date", from);
     if (to) meetingsQuery = meetingsQuery.lt("date", nextDate(to));
     if (q) meetingsQuery = meetingsQuery.or(`title.ilike.%${q}%,venue.ilike.%${q}%,description.ilike.%${q}%`);
@@ -60,8 +65,20 @@ export default async function AdminReportsPage({
 
   const counts = new Map<string, number>();
   for (const record of attendance) counts.set(record.meeting_id, (counts.get(record.meeting_id) ?? 0) + 1);
-  const presentMemberIds = new Set(attendance.map((record) => record.member_id));
-  const zeroAttendance = Math.max(0, eligibleMembers.length - presentMemberIds.size);
+
+  const operationalMembers = eligibleMembers.map((member) => {
+    const summary = calculateOperationalSummary({
+      membershipStatus: "active",
+      membershipActivatedAt: member.membership_activated_at,
+      meetings,
+      attendedMeetingIds: attendance.filter((record) => record.member_id === member.id).map((record) => record.meeting_id),
+    });
+    return { id: member.id, ...summary };
+  });
+
+  const activeCount = operationalMembers.filter((member) => member.status === "active").length;
+  const reviewCount = operationalMembers.filter((member) => member.status === "review").length;
+  const zeroAttendance = Math.max(0, eligibleMembers.length - new Set(attendance.map((record) => record.member_id)).size);
   const reportParams = new URLSearchParams();
   if (from) reportParams.set("from", from);
   if (to) reportParams.set("to", to);
@@ -93,7 +110,14 @@ export default async function AdminReportsPage({
       {error && <p className="mt-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">Attendance data could not be loaded.</p>}
 
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        {[ ["Meetings", meetings.length], ["Total check-ins", attendance.length], ["Current active members", eligibleMembers.length], ["Current active zero-attendance", zeroAttendance], ["Average check-ins", meetings.length ? Math.round(attendance.length / meetings.length) : 0] ].map(([label, value]) => (
+        {[
+          ["Meetings", meetings.length],
+          ["Total check-ins", attendance.length],
+          ["Operationally active", activeCount],
+          ["Needs review", reviewCount],
+          ["Current active zero-attendance", zeroAttendance],
+          ["Average check-ins", meetings.length ? Math.round(attendance.length / meetings.length) : 0],
+        ].map(([label, value]) => (
           <div key={label} className="card p-5"><p className="text-3xl font-bold text-maroon-700">{value}</p><p className="mt-1 text-sm text-gray-500">{label}</p></div>
         ))}
       </div>

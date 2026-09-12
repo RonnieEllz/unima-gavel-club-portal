@@ -1,5 +1,15 @@
 import { createClient } from "@/lib/supabase/server";
-import type { Meeting, Post, GalleryImage } from "@/types/database";
+import type { Meeting, Post, GalleryImage, Semester } from "@/types/database";
+
+export async function getActiveSemester(): Promise<Semester | null> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("semesters")
+    .select("id, name, starts_on, ends_on, is_active, created_at")
+    .eq("is_active", true)
+    .maybeSingle();
+  return data as Semester | null;
+}
 
 export async function getUpcomingMeeting(): Promise<Meeting | null> {
   const supabase = createClient();
@@ -64,10 +74,28 @@ export async function getMemberAttendanceHistory(memberId: string) {
   const supabase = createClient();
   const { data } = await supabase
     .from("attendance")
-    .select("id, checked_in_at, meetings(id, title, date)")
+    .select("id, meeting_id, checked_in_at, meetings(id, title, date)")
     .eq("member_id", memberId)
     .order("checked_in_at", { ascending: false });
   return data ?? [];
+}
+
+export async function getMeetingCount() {
+  const supabase = createClient();
+  const { count } = await supabase.from("meetings").select("id", { count: "exact", head: true });
+  return count ?? 0;
+}
+
+export async function getActiveSemesterMeetings(): Promise<Meeting[]> {
+  const semester = await getActiveSemester();
+  if (!semester) return [];
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("meetings")
+    .select("id, title, date, time, venue, description, attendance_open, created_by, created_at")
+    .eq("semester_id", semester.id)
+    .order("date", { ascending: true });
+  return (data as Meeting[]) ?? [];
 }
 
 export async function getCurrentUserProfile() {

@@ -44,7 +44,7 @@ export async function GET(request: Request) {
   const program = params.get("program")?.trim().slice(0, 80) ?? "";
   const year = Number(params.get("year"));
   const sex = params.get("sex") === "male" || params.get("sex") === "female" ? params.get("sex") : "";
-  const statuses = ["pending", "active", "inactive", "rejected"];
+  const statuses = ["pending", "active", "inactive", "rejected", "alumni"];
   const status = statuses.includes(params.get("status") ?? "") ? params.get("status") : "";
   let query = supabase
     .from("profiles")

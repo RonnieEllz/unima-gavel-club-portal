@@ -3,12 +3,16 @@
 import { useState, useTransition } from "react";
 import { bulkSetMembershipStatus } from "@/lib/actions/admin";
 import type { MembershipStatus, Profile } from "@/types/database";
+import type { OperationalSummary } from "@/lib/operational-status";
 import MemberStatusControl from "./MemberStatusControl";
 import MemberDetailsForm from "./MemberDetailsForm";
+import PaymentStatusControl from "./PaymentStatusControl";
 
-const statusOptions: MembershipStatus[] = ["pending", "active", "inactive", "rejected"];
+const statusOptions: MembershipStatus[] = ["pending", "active", "inactive", "rejected", "alumni"];
 
-export default function BulkMemberStatusForm({ members }: { members: Profile[] }) {
+type MemberWithOperationalStatus = Profile & { operationalSummary: OperationalSummary };
+
+export default function BulkMemberStatusForm({ members }: { members: MemberWithOperationalStatus[] }) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [status, setStatus] = useState<MembershipStatus>("active");
   const [isPending, startTransition] = useTransition();
@@ -117,7 +121,9 @@ export default function BulkMemberStatusForm({ members }: { members: Profile[] }
             <th className="px-4 py-3 font-semibold">Program / Year</th>
             <th className="px-4 py-3 font-semibold">Sex</th>
             <th className="px-4 py-3 font-semibold">Phone</th>
-            <th className="px-4 py-3 font-semibold">Status</th>
+            <th className="px-4 py-3 font-semibold">Membership</th>
+            <th className="px-4 py-3 font-semibold">Payment</th>
+            <th className="px-4 py-3 font-semibold">Operational</th>
             <th className="px-4 py-3 font-semibold">Actions</th>
           </tr>
         </thead>
@@ -144,6 +150,28 @@ export default function BulkMemberStatusForm({ members }: { members: Profile[] }
                 <td className="px-4 py-3 align-top text-gray-600">{member.phone_number}</td>
                 <td className="px-4 py-3 align-top">
                   <MemberStatusControl memberId={member.id} currentStatus={member.membership_status} />
+                </td>
+                <td className="px-4 py-3 align-top">
+                  <PaymentStatusControl memberId={member.id} paid={member.payment_verified} />
+                  {member.last_payment_date && (
+                    <p className="mt-1 text-xs text-gray-500">{new Date(member.last_payment_date).toLocaleDateString()}</p>
+                  )}
+                </td>
+                <td className="px-4 py-3 align-top">
+                  <span
+                    className={
+                      member.operationalSummary.status === "active"
+                        ? "font-semibold text-green-700"
+                        : member.operationalSummary.status === "review"
+                          ? "font-semibold text-amber-700"
+                          : "text-gray-500"
+                    }
+                  >
+                    {member.operationalSummary.status === "review" ? "Review required" : member.operationalSummary.status}
+                    <p className="mt-1 text-xs text-gray-500">
+                      {member.operationalSummary.attendedCount} attended · {member.operationalSummary.missedCount} missed
+                    </p>
+                  </span>
                 </td>
                 <td className="px-4 py-3 align-top">
                   <details className="text-xs text-gray-500">

@@ -5,13 +5,14 @@ import { useRouter } from "next/navigation";
 import { setMembershipStatus } from "@/lib/actions/admin";
 import type { MembershipStatus } from "@/types/database";
 
-const options: MembershipStatus[] = ["pending", "active", "inactive", "rejected"];
+const options: MembershipStatus[] = ["pending", "active", "inactive", "rejected", "alumni"];
 
 const styles: Record<MembershipStatus, string> = {
   active: "bg-green-100 text-green-700",
   pending: "bg-yellow-100 text-yellow-700",
   inactive: "bg-gray-100 text-gray-600",
   rejected: "bg-red-100 text-red-700",
+  alumni: "bg-blue-100 text-blue-700",
 };
 
 export default function MemberStatusControl({

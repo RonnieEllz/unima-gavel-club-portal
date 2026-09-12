@@ -1,4 +1,4 @@
-export type MembershipStatus = "pending" | "active" | "inactive" | "rejected";
+export type MembershipStatus = "pending" | "active" | "inactive" | "rejected" | "alumni";
 export type MemberSex = "male" | "female";
 export type PostType = "update" | "story";
 export type AdminRoleName = "super_admin" | "administrator" | "operations_admin" | "content_administrator";
@@ -14,6 +14,9 @@ export interface Profile {
   learning_expectations: string | null;
   preferred_placement: string | null;
   membership_status: MembershipStatus;
+  membership_activated_at: string | null;
+  payment_verified: boolean;
+  last_payment_date: string | null;
   avatar_url: string | null;
   created_at: string;
   updated_at: string;
@@ -27,7 +30,31 @@ export interface Meeting {
   venue: string;
   description: string | null;
   attendance_open: boolean;
+  semester_id: string | null;
   created_by: string | null;
+  created_at: string;
+}
+
+export interface Semester {
+  id: string;
+  name: string;
+  starts_on: string;
+  ends_on: string;
+  is_active: boolean;
+  completed_at: string | null;
+  completed_by: string | null;
+  created_at: string;
+}
+
+export interface MemberProgression {
+  id: string;
+  member_id: string;
+  semester_id: string;
+  previous_year: number;
+  next_year: number | null;
+  previous_status: MembershipStatus;
+  next_status: MembershipStatus;
+  processed_by: string | null;
   created_at: string;
 }
 
@@ -85,6 +112,8 @@ export interface Database {
   public: {
     Tables: {
       profiles: { Row: Profile; Insert: Partial<Profile>; Update: Partial<Profile>; Relationships: [] };
+      semesters: { Row: Semester; Insert: Partial<Semester>; Update: Partial<Semester>; Relationships: [] };
+      member_progressions: { Row: MemberProgression; Insert: Partial<MemberProgression>; Update: Partial<MemberProgression>; Relationships: [] };
       meetings: { Row: Meeting; Insert: Partial<Meeting>; Update: Partial<Meeting>; Relationships: [] };
       attendance: {
         Row: AttendanceRecord;
