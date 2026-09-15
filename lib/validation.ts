@@ -50,6 +50,16 @@ export const landingPageSettingsSchema = z.object({
   intro_content: z.string().trim().min(2).max(3000),
   intro_image: optionalImageSchema,
   intro_image_alt: z.string().trim().min(2).max(200),
+  about_heading: z.string().trim().min(2).max(160),
+  about_content: z.string().trim().min(2).max(5000),
+  about_image: optionalImageSchema,
+  about_image_alt: z.string().trim().min(2).max(200),
+  footer_description: z.string().trim().min(2).max(500),
+  footer_address: z.string().trim().min(2).max(240),
+  footer_email: z.string().trim().email().max(240),
+  footer_phone_1: z.string().trim().max(40),
+  footer_phone_2: z.string().trim().max(40),
+  footer_copyright: z.string().trim().min(2).max(240),
   show_announcement: z.boolean(),
   show_intro: z.boolean(),
   show_meeting: z.boolean(),
@@ -59,6 +69,42 @@ export const landingPageSettingsSchema = z.object({
   seo_title: z.string().trim().min(2).max(160),
   seo_description: z.string().trim().min(2).max(320),
   social_image: optionalImageSchema,
+});
+
+export const landingPageContentSchema = landingPageSettingsSchema.pick({
+  hero_eyebrow: true,
+  hero_title: true,
+  hero_description: true,
+  hero_image: true,
+  intro_heading: true,
+  intro_content: true,
+  intro_image: true,
+  intro_image_alt: true,
+  show_announcement: true,
+  show_intro: true,
+  show_meeting: true,
+  show_stories: true,
+  show_updates: true,
+  show_gallery: true,
+  seo_title: true,
+  seo_description: true,
+  social_image: true,
+});
+
+export const aboutPageSettingsSchema = landingPageSettingsSchema.pick({
+  about_heading: true,
+  about_content: true,
+  about_image: true,
+  about_image_alt: true,
+});
+
+export const footerSettingsSchema = landingPageSettingsSchema.pick({
+  footer_description: true,
+  footer_address: true,
+  footer_email: true,
+  footer_phone_1: true,
+  footer_phone_2: true,
+  footer_copyright: true,
 });
 
 export const memberDetailsSchema = z.object({

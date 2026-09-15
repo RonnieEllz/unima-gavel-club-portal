@@ -115,6 +115,16 @@ export interface LandingPageSettings {
   intro_content: string;
   intro_image: string | null;
   intro_image_alt: string;
+  about_heading: string;
+  about_content: string;
+  about_image: string | null;
+  about_image_alt: string;
+  footer_description: string;
+  footer_address: string;
+  footer_email: string;
+  footer_phone_1: string | null;
+  footer_phone_2: string | null;
+  footer_copyright: string;
   show_announcement: boolean;
   show_intro: boolean;
   show_meeting: boolean;

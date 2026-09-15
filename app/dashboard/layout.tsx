@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import MemberNavbar from "@/components/MemberNavbar";
+import Footer from "@/components/Footer";
 import { getCurrentUserProfile } from "@/lib/data";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -10,6 +11,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <div className="min-h-screen bg-gray-50">
       <MemberNavbar isAdmin={isAdmin} />
       <main className="container-page py-10">{children}</main>
+      <Footer />
     </div>
   );
 }

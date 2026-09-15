@@ -232,6 +232,16 @@
     intro_content text not null default 'The UNIMA Gavel Club brings together students who want to become confident, persuasive and thoughtful communicators. Through regular meetings, prepared speeches, impromptu challenges and leadership roles, our members build the skills that carry into classrooms, interviews and every room they will one day lead.\n\nWhether you are terrified of public speaking or already love the stage, there is a place for you here.',
     intro_image text,
     intro_image_alt text not null default 'Students in discussion on campus',
+    about_heading text not null default 'About UNIMA Gavel Club',
+    about_content text not null default 'The UNIMA Toastmasters Gavel Club is a student-led community at the University of Malawi built around one goal: helping members become confident, capable communicators and leaders.\n\nThrough regular meetings, prepared and impromptu speeches, evaluation, and rotating leadership roles, members practice real skills in a supportive environment, skills that carry far beyond the meeting room.\n\nWhatever brought you here, whether overcoming a fear of public speaking, sharpening your leadership, or simply finding a community of ambitious peers, there is a place for you at Gavel Club.',
+    about_image text,
+    about_image_alt text not null default 'Students at a leadership meeting',
+    footer_description text not null default 'A student community at the University of Malawi focused on developing communication, public speaking, leadership and confidence.',
+    footer_address text not null default 'University of Malawi, Zomba, Malawi',
+    footer_email text not null default 'gavelclub@unima.ac.mw',
+    footer_phone_1 text,
+    footer_phone_2 text,
+    footer_copyright text not null default 'UNIMA Toastmasters Gavel Club. All rights reserved.',
     show_announcement boolean not null default true,
     show_intro boolean not null default true,
     show_meeting boolean not null default true,
@@ -373,7 +383,7 @@
     select exists (
       select 1 from admin_roles
       where user_id = auth.uid()
-        and role in ('super_admin', 'administrator', 'content_administrator')
+        and role in ('super_admin', 'administrator')
     );
   $$ language sql security definer set search_path = public stable;
 

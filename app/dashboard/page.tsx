@@ -3,11 +3,14 @@ import {
   getCurrentUserProfile,
   getMemberAttendanceHistory,
   getActiveSemesterMeetings,
+  getUpcomingMeetings,
   getLatestPosts,
 } from "@/lib/data";
 import { calculateOperationalSummary } from "@/lib/operational-status";
 import UpdateCard from "@/components/UpdateCard";
 import StoryCard from "@/components/StoryCard";
+import MeetingCard from "@/components/MeetingCard";
+import AchievementBadges from "@/components/AchievementBadges";
 import type { Profile } from "@/types/database";
 
 const statusStyles: Record<string, string> = {
@@ -21,14 +24,18 @@ export default async function DashboardPage() {
   const current = await getCurrentUserProfile();
   const user = current.user;
   const profile = current.profile as Profile | null;
-  const [history, semesterMeetings, updates, stories] = await Promise.all([
+  const [history, semesterMeetings, upcomingMeetings, updates, stories] = await Promise.all([
     user ? getMemberAttendanceHistory(user.id) : Promise.resolve([]),
     getActiveSemesterMeetings(),
+    getUpcomingMeetings(1),
     getLatestPosts("update", 2),
     getLatestPosts("story", 2),
   ]);
 
-  const presentCount = history.length;
+  const semesterMeetingIds = new Set(semesterMeetings.map((meeting) => meeting.id));
+  const today = new Date().toISOString().slice(0, 10);
+  const completedSemesterMeetingCount = semesterMeetings.filter((meeting) => meeting.date < today).length;
+  const presentCount = history.filter((record) => semesterMeetingIds.has(record.meeting_id)).length;
   const operationalSummary = profile && profile.membership_status === "active"
     ? calculateOperationalSummary({
         membershipStatus: profile.membership_status,
@@ -39,10 +46,10 @@ export default async function DashboardPage() {
     : null;
 
   return (
-    <div className="space-y-10">
-      <section className="card grid gap-6 p-5 sm:p-6 md:grid-cols-[minmax(0,1fr)_minmax(20rem,1.4fr)] md:items-center">
+    <div className="space-y-6 sm:space-y-10">
+      <section className="card grid gap-4 p-4 sm:gap-6 sm:p-6 md:grid-cols-[minmax(0,1fr)_minmax(20rem,1.4fr)] md:items-center">
         <div>
-          <h1 className="font-display text-3xl font-bold text-maroon-800">
+          <h1 className="font-display text-2xl font-bold text-maroon-800 sm:text-3xl">
             Welcome, {profile?.full_name?.split(" ")[0] ?? "Member"}!
           </h1>
           <p className="mt-1 text-gray-600">
@@ -58,23 +65,51 @@ export default async function DashboardPage() {
               {profile.payment_verified ? "Membership paid" : "Membership unpaid"}
             </span>
           )}
+          <div className="mt-3 inline-flex items-baseline gap-2 rounded-lg bg-gray-50 px-3 py-2 sm:mt-5">
+            <span className="text-xl font-bold text-maroon-700">{operationalSummary?.attendedCount ?? presentCount}</span>
+            <span className="text-sm font-medium text-gray-700">
+              {((operationalSummary?.attendedCount ?? presentCount) === 1) ? "meeting" : "meetings"} attended
+            </span>
+            <span className="text-xs text-gray-500">this semester</span>
+          </div>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-1">
-          <div className="flex items-center gap-3 rounded-lg bg-gray-50 px-4 py-3 sm:justify-center">
-            <p className="text-2xl font-bold text-maroon-700">{operationalSummary?.attendedCount ?? presentCount}</p>
-            <p className="text-sm text-gray-500">Meetings Attended This Semester</p>
-          </div>
-          <div className="flex items-center rounded-lg bg-gray-50 px-4 py-3 sm:justify-center">
-            <Link href="/dashboard/attendance" className="text-sm font-semibold text-maroon-700 hover:underline">
-              View Full Attendance History →
-            </Link>
-          </div>
+        <div>
+          <AchievementBadges attendedCount={operationalSummary?.attendedCount ?? presentCount} completedMeetingCount={completedSemesterMeetingCount} />
         </div>
       </section>
 
-      <div className="grid gap-8 md:grid-cols-2">
+      <section aria-labelledby="quick-actions-heading">
+        <div className="flex items-center justify-between gap-4">
+          <h2 id="quick-actions-heading" className="font-display text-lg font-bold text-maroon-800 sm:text-xl">Quick actions</h2>
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-2 sm:mt-4 sm:grid-cols-4 sm:gap-3">
+          <Link href="/dashboard/meetings" className="card px-2 py-2.5 text-center text-xs font-semibold text-maroon-700 transition hover:border-maroon-300 hover:bg-maroon-50 sm:px-4 sm:py-3 sm:text-sm">View meetings</Link>
+          <Link href="/dashboard/attendance" className="card px-2 py-2.5 text-center text-xs font-semibold text-maroon-700 transition hover:border-maroon-300 hover:bg-maroon-50 sm:px-4 sm:py-3 sm:text-sm">View attendance</Link>
+          <Link href="/dashboard/profile" className="card px-2 py-2.5 text-center text-xs font-semibold text-maroon-700 transition hover:border-maroon-300 hover:bg-maroon-50 sm:px-4 sm:py-3 sm:text-sm">View profile</Link>
+          <Link href="/updates" className="card px-2 py-2.5 text-center text-xs font-semibold text-maroon-700 transition hover:border-maroon-300 hover:bg-maroon-50 sm:px-4 sm:py-3 sm:text-sm">Read updates</Link>
+        </div>
+      </section>
+
+      <section className="space-y-3 sm:space-y-4" aria-labelledby="next-meeting-heading">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h2 id="next-meeting-heading" className="font-display text-lg font-bold text-maroon-800 sm:text-xl">Next Meeting</h2>
+            <p className="mt-1 text-xs text-gray-500 sm:text-sm">Keep up with the club calendar.</p>
+          </div>
+        </div>
+        {upcomingMeetings[0] ? (
+          <MeetingCard meeting={upcomingMeetings[0]} />
+        ) : (
+          <p className="rounded-md bg-gray-50 px-4 py-3 text-sm text-gray-500">No upcoming meeting has been scheduled.</p>
+        )}
+      </section>
+
+      <div className="grid gap-6 sm:gap-8 md:grid-cols-2">
         <section>
-          <h2 className="font-display text-xl font-bold text-maroon-800">Latest Updates</h2>
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="font-display text-lg font-bold text-maroon-800 sm:text-xl">Latest Updates</h2>
+            <Link href="/updates" className="text-xs font-semibold text-maroon-700 hover:underline sm:text-sm">View all</Link>
+          </div>
           <div className="mt-4 space-y-3">
             {updates.length > 0 ? (
               updates.map((u) => <UpdateCard key={u.id} post={u} />)
@@ -84,7 +119,7 @@ export default async function DashboardPage() {
           </div>
         </section>
         <section>
-          <h2 className="font-display text-xl font-bold text-maroon-800">Latest Stories</h2>
+          <h2 className="font-display text-lg font-bold text-maroon-800 sm:text-xl">Latest Stories</h2>
           <div className="mt-4 grid gap-4">
             {stories.length > 0 ? (
               stories.map((s) => <StoryCard key={s.id} post={s} />)

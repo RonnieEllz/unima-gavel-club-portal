@@ -86,9 +86,90 @@ body {
   animation: attendance-summary-in 500ms ease-out 180ms both;
 }
 
+.achievement-badge {
+  @apply min-w-0 rounded-lg border p-3 text-center transition;
+}
+
+.achievement-badge-earned {
+  @apply border-gold-200 bg-gold-50 shadow-sm;
+}
+
+.achievement-badge-locked {
+  @apply border-gray-200 bg-gray-50 opacity-60;
+}
+
+.achievement-figure {
+  @apply relative mx-auto flex h-14 w-14 items-center justify-center rounded-full border-4 border-maroon-700 bg-gold-400 text-xl font-bold text-maroon-900;
+}
+
+.achievement-figure-locked {
+  @apply border-gray-400 bg-gray-200 text-gray-500 grayscale;
+}
+
+.achievement-figure-earned {
+  animation: achievement-bob 1.8s ease-in-out infinite;
+}
+
+.achievement-face {
+  position: relative;
+  z-index: 2;
+  line-height: 1;
+}
+
+.achievement-arm {
+  position: absolute;
+  top: 20px;
+  height: 4px;
+  width: 18px;
+  border-radius: 999px;
+  background: currentColor;
+  transform-origin: center;
+}
+
+.achievement-arm-left {
+  left: -15px;
+  transform: rotate(24deg);
+}
+
+.achievement-arm-right {
+  right: -15px;
+  transform: rotate(-24deg);
+}
+
+.achievement-figure-steady .achievement-arm-left,
+.achievement-figure-steady .achievement-arm-right {
+  transform: rotate(-45deg);
+}
+
+.achievement-figure-hero .achievement-arm-left,
+.achievement-figure-hero .achievement-arm-right,
+.achievement-figure-commit .achievement-arm-left,
+.achievement-figure-commit .achievement-arm-right {
+  top: 10px;
+  transform: rotate(-65deg);
+}
+
+.achievement-figure-champion,
+.achievement-figure-perfect {
+  animation: achievement-celebrate 1.1s ease-in-out infinite;
+}
+
+@keyframes achievement-bob {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-4px) rotate(2deg); }
+}
+
+@keyframes achievement-celebrate {
+  0%, 100% { transform: translateY(0) rotate(-4deg) scale(1); }
+  50% { transform: translateY(-5px) rotate(4deg) scale(1.06); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .attendance-donut-in,
   .attendance-summary-in,
+  .achievement-figure-earned,
+  .achievement-figure-champion,
+  .achievement-figure-perfect,
   .navigation-progress-bar {
     animation: none;
   }

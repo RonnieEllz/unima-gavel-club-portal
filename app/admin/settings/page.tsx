@@ -1,8 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
-import { updateLandingPageSettings, updateSiteAnnouncement } from "@/lib/actions/admin";
+import { updateAboutPageSettings, updateFooterSettings, updateLandingPageSettings, updateSiteAnnouncement } from "@/lib/actions/admin";
 import { normalizeAnnouncementInput } from "@/lib/announcement";
 import { defaultLandingPageSettings } from "@/lib/data";
 import ImageUploadField from "@/components/admin/ImageUploadField";
+import SettingsForm from "@/components/admin/SettingsForm";
 
 export default async function AdminSettingsPage() {
   const supabase = createClient();
@@ -22,14 +23,24 @@ export default async function AdminSettingsPage() {
 
   const submitLandingSettings = async (formData: FormData) => {
     "use server";
-    await updateLandingPageSettings(formData);
+    return updateLandingPageSettings(formData);
+  };
+
+  const submitAboutSettings = async (formData: FormData) => {
+    "use server";
+    return updateAboutPageSettings(formData);
+  };
+
+  const submitFooterSettings = async (formData: FormData) => {
+    "use server";
+    return updateFooterSettings(formData);
   };
 
   const submitAnnouncement = async (formData: FormData) => {
     "use server";
     const normalized = normalizeAnnouncementInput(String(formData.get("announcement") ?? ""));
-    if (!normalized.valid) throw new Error("Announcement must be 1-500 characters long.");
-    await updateSiteAnnouncement(normalized.text);
+    if (!normalized.valid) return { error: "Announcement must be 1-500 characters long." };
+    return updateSiteAnnouncement(normalized.text);
   };
 
   return (
@@ -39,7 +50,7 @@ export default async function AdminSettingsPage() {
         Manage the public landing page copy, images, visibility, and SEO.
       </p>
 
-      <form action={submitLandingSettings} className="card mt-6 grid gap-6 p-6">
+      <SettingsForm action={submitLandingSettings} buttonLabel="Save landing page">
         <fieldset className="grid gap-4">
           <legend className="font-display text-xl font-bold text-maroon-800">Hero</legend>
           <input name="hero_eyebrow" defaultValue={values.hero_eyebrow} placeholder="Eyebrow" className="input-field" required />
@@ -80,14 +91,33 @@ export default async function AdminSettingsPage() {
           <ImageUploadField name="social_image" label="Social sharing image" currentUrl={values.social_image ?? ""} />
         </fieldset>
 
-        <div>
-          <button type="submit" className="btn-primary w-fit">
-            Save landing page
-          </button>
-        </div>
-      </form>
+      </SettingsForm>
 
-      <form action={submitAnnouncement} className="card mt-6 grid gap-4 p-6">
+      <SettingsForm action={submitAboutSettings} buttonLabel="Save About page">
+        <div>
+          <h2 className="font-display text-xl font-bold text-maroon-800">About Page</h2>
+          <p className="mt-1 text-sm text-gray-600">Edit the public About page independently from the landing page.</p>
+        </div>
+        <input name="about_heading" defaultValue={values.about_heading} placeholder="About heading" className="input-field" required />
+        <textarea name="about_content" defaultValue={values.about_content} placeholder="About text. Separate paragraphs with a blank line." className="input-field" rows={9} required />
+        <ImageUploadField name="about_image" label="About image" currentUrl={values.about_image ?? ""} />
+        <input name="about_image_alt" defaultValue={values.about_image_alt} placeholder="About image description" className="input-field" required />
+      </SettingsForm>
+
+      <SettingsForm action={submitFooterSettings} buttonLabel="Save Footer">
+        <div>
+          <h2 className="font-display text-xl font-bold text-maroon-800">Footer</h2>
+          <p className="mt-1 text-sm text-gray-600">Edit the shared footer independently from the landing and About pages.</p>
+        </div>
+        <textarea name="footer_description" defaultValue={values.footer_description} placeholder="Footer description" className="input-field" rows={3} required />
+        <input name="footer_address" defaultValue={values.footer_address} placeholder="Footer address" className="input-field" required />
+        <input name="footer_email" type="email" defaultValue={values.footer_email} placeholder="Footer email" className="input-field" required />
+        <input name="footer_phone_1" type="tel" defaultValue={values.footer_phone_1 ?? ""} placeholder="Phone number 1 (optional)" className="input-field" />
+        <input name="footer_phone_2" type="tel" defaultValue={values.footer_phone_2 ?? ""} placeholder="Phone number 2 (optional)" className="input-field" />
+        <input name="footer_copyright" defaultValue={values.footer_copyright} placeholder="Copyright text" className="input-field" required />
+      </SettingsForm>
+
+      <SettingsForm action={submitAnnouncement} buttonLabel="Save announcement">
         <div>
           <label htmlFor="announcement" className="label-field">
             Landing page announcement
@@ -102,10 +132,7 @@ export default async function AdminSettingsPage() {
             maxLength={500}
           />
         </div>
-        <button type="submit" className="btn-primary w-fit">
-          Save announcement
-        </button>
-      </form>
+      </SettingsForm>
     </div>
   );
 }

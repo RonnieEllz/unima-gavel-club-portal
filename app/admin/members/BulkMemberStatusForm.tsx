@@ -7,10 +7,11 @@ import type { OperationalSummary } from "@/lib/operational-status";
 import MemberStatusControl from "./MemberStatusControl";
 import MemberDetailsForm from "./MemberDetailsForm";
 import PaymentStatusControl from "./PaymentStatusControl";
+import AchievementBadges from "@/components/AchievementBadges";
 
 const statusOptions: MembershipStatus[] = ["pending", "active", "inactive", "rejected", "alumni"];
 
-type MemberWithOperationalStatus = Profile & { operationalSummary: OperationalSummary };
+type MemberWithOperationalStatus = Profile & { operationalSummary: OperationalSummary; completedMeetingCount: number };
 
 export default function BulkMemberStatusForm({ members }: { members: MemberWithOperationalStatus[] }) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -105,7 +106,64 @@ export default function BulkMemberStatusForm({ members }: { members: MemberWithO
         </div>
       )}
 
-      <table className="w-full min-w-[850px] text-left text-sm">
+      <div className="divide-y divide-gray-100 md:hidden">
+        {members.map((member) => {
+          const selected = selectedIds.includes(member.id);
+          return (
+            <article key={member.id} className={`space-y-3 p-4 ${selected ? "bg-maroon-50/60" : "bg-white"}`}>
+              <div className="flex items-start justify-between gap-3">
+                <label className="flex min-w-0 items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={selected}
+                    onChange={() => toggleMember(member.id)}
+                    aria-label={`Select ${member.full_name}`}
+                    className="mt-1 h-4 w-4 shrink-0 rounded border-gray-300 text-maroon-700 focus:ring-maroon-700"
+                  />
+                  <span className="min-w-0">
+                    <span className="block truncate font-semibold text-gray-800">{member.full_name}</span>
+                    <span className="mt-0.5 block truncate text-xs text-gray-500">{member.program} · Year {member.year_of_study}</span>
+                  </span>
+                </label>
+                <span className="shrink-0 text-xs capitalize text-gray-500">{member.sex}</span>
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div>
+                  <p className="text-gray-400">Membership</p>
+                  <MemberStatusControl memberId={member.id} currentStatus={member.membership_status} />
+                </div>
+                <div>
+                  <p className="text-gray-400">Payment</p>
+                  <PaymentStatusControl memberId={member.id} paid={member.payment_verified} />
+                </div>
+                <div>
+                  <p className="text-gray-400">Operational</p>
+                  <p className={member.operationalSummary.status === "active" ? "font-semibold text-green-700" : member.operationalSummary.status === "review" ? "font-semibold text-amber-700" : "text-gray-500"}>
+                    {member.operationalSummary.status === "review" ? "Review required" : member.operationalSummary.status}
+                  </p>
+                  <p className="text-gray-500">{member.operationalSummary.attendedCount} attended · {member.operationalSummary.missedCount} missed</p>
+                </div>
+                <div>
+                  <p className="text-gray-400">Phone</p>
+                  <p className="truncate text-gray-700">{member.phone_number}</p>
+                </div>
+              </div>
+              <details className="text-xs text-gray-500">
+                <summary className="cursor-pointer font-semibold text-maroon-700">View details and badges</summary>
+                <div className="mt-3 space-y-2">
+                  <p><b>Holiday residence:</b> {member.holiday_residence || "-"}</p>
+                  <p><b>Learning goals:</b> {member.learning_expectations || "-"}</p>
+                  <p><b>Preferred placement:</b> {member.preferred_placement || "-"}</p>
+                  <AchievementBadges attendedCount={member.operationalSummary.attendedCount} completedMeetingCount={member.completedMeetingCount} />
+                  <MemberDetailsForm member={member} />
+                </div>
+              </details>
+            </article>
+          );
+        })}
+      </div>
+
+      <table className="hidden w-full min-w-[850px] text-left text-sm md:table">
         <thead className="bg-maroon-50 text-maroon-800">
           <tr>
             <th className="w-12 px-4 py-3">
@@ -180,6 +238,10 @@ export default function BulkMemberStatusForm({ members }: { members: MemberWithO
                       <p><b>Holiday residence:</b> {member.holiday_residence || "-"}</p>
                       <p><b>Learning goals:</b> {member.learning_expectations || "-"}</p>
                       <p><b>Preferred placement:</b> {member.preferred_placement || "-"}</p>
+                      <AchievementBadges
+                        attendedCount={member.operationalSummary.attendedCount}
+                        completedMeetingCount={member.completedMeetingCount}
+                      />
                       <MemberDetailsForm member={member} />
                     </div>
                   </details>

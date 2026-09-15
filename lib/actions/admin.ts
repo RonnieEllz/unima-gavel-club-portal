@@ -9,7 +9,9 @@ import { canManageOperations, canManageSemesters } from "@/lib/role-policy";
 import { recordAuditEvent } from "@/lib/actions/audit";
 import {
   adminRoleSchema,
-  landingPageSettingsSchema,
+  aboutPageSettingsSchema,
+  footerSettingsSchema,
+  landingPageContentSchema,
   meetingSchema,
   memberDetailsSchema,
   postSchema,
@@ -887,26 +889,17 @@ export async function updateSiteAnnouncement(message: string) {
   return { success: true };
 }
 
-export async function updateLandingPageSettings(formData: FormData) {
-  const parsed = landingPageSettingsSchema.safeParse({
-    hero_eyebrow: String(formData.get("hero_eyebrow") ?? ""),
-    hero_title: String(formData.get("hero_title") ?? ""),
-    hero_description: String(formData.get("hero_description") ?? ""),
-    hero_image: String(formData.get("hero_image") ?? ""),
-    intro_heading: String(formData.get("intro_heading") ?? ""),
-    intro_content: String(formData.get("intro_content") ?? ""),
-    intro_image: String(formData.get("intro_image") ?? ""),
-    intro_image_alt: String(formData.get("intro_image_alt") ?? ""),
-    show_announcement: formData.get("show_announcement") === "on",
-    show_intro: formData.get("show_intro") === "on",
-    show_meeting: formData.get("show_meeting") === "on",
-    show_stories: formData.get("show_stories") === "on",
-    show_updates: formData.get("show_updates") === "on",
-    show_gallery: formData.get("show_gallery") === "on",
-    seo_title: String(formData.get("seo_title") ?? ""),
-    seo_description: String(formData.get("seo_description") ?? ""),
-    social_image: String(formData.get("social_image") ?? ""),
-  });
+async function updateLandingSettingsSection(
+  formData: FormData,
+  schema: z.AnyZodObject,
+  fields: string[],
+  action: string
+) {
+  const input = Object.fromEntries(fields.map((field) => [
+    field,
+    field.startsWith("show_") ? formData.get(field) === "on" : String(formData.get(field) ?? ""),
+  ]));
+  const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid landing page settings." };
 
   const supabase = createClient();
@@ -920,21 +913,54 @@ export async function updateLandingPageSettings(formData: FormData) {
     .select("*")
     .eq("id", true)
     .maybeSingle();
+  const update = { ...parsed.data, updated_by: auth.userId };
   const { error } = await supabase
     .from("landing_page_settings")
-    .upsert({ id: true, ...parsed.data, updated_by: auth.userId }, { onConflict: "id" });
+    .upsert({ id: true, ...update }, { onConflict: "id" });
   if (error) return { error: error.message };
 
   await recordAuditEvent({
-    action: "landing_page_settings_updated",
+    action,
     entityType: "landing_page_settings",
     entityId: "default",
     beforeData: previous,
-    afterData: parsed.data,
+    afterData: update,
   });
   revalidatePath("/");
   revalidatePath("/admin/settings");
   return { success: true };
+}
+
+export async function updateLandingPageSettings(formData: FormData) {
+  return updateLandingSettingsSection(
+    formData,
+    landingPageContentSchema,
+    [
+      "hero_eyebrow", "hero_title", "hero_description", "hero_image",
+      "intro_heading", "intro_content", "intro_image", "intro_image_alt",
+      "show_announcement", "show_intro", "show_meeting", "show_stories", "show_updates", "show_gallery",
+      "seo_title", "seo_description", "social_image",
+    ],
+    "landing_page_content_updated"
+  );
+}
+
+export async function updateAboutPageSettings(formData: FormData) {
+  return updateLandingSettingsSection(
+    formData,
+    aboutPageSettingsSchema,
+    ["about_heading", "about_content", "about_image", "about_image_alt"],
+    "about_page_settings_updated"
+  );
+}
+
+export async function updateFooterSettings(formData: FormData) {
+  return updateLandingSettingsSection(
+    formData,
+    footerSettingsSchema,
+    ["footer_description", "footer_address", "footer_email", "footer_phone_1", "footer_phone_2", "footer_copyright"],
+    "footer_settings_updated"
+  );
 }
 
 export async function removeAdministrator(userId: string, password: string) {

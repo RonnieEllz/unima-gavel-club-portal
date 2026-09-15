@@ -12,8 +12,8 @@ export default function MeetingCard({
 }) {
   const date = new Date(`${meeting.date}T${meeting.time}`);
   return (
-    <div className="card flex items-center gap-4 p-5">
-      <div className="flex w-16 flex-shrink-0 flex-col items-center justify-center rounded-lg bg-maroon-700 py-2 text-white">
+    <div className="card flex items-center gap-3 p-4 sm:gap-4 sm:p-5">
+      <div className="flex w-14 flex-shrink-0 flex-col items-center justify-center rounded-lg bg-maroon-700 py-2 text-white sm:w-16">
         <span className="text-xs uppercase">{date.toLocaleDateString(undefined, { month: "short" })}</span>
         <span className="text-xl font-bold leading-none">{date.getDate()}</span>
       </div>

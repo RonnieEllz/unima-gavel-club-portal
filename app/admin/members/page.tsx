@@ -50,6 +50,10 @@ export default async function AdminMembersPage({
     : [{ data: [] as { id: string; date: string }[] }, { data: [] as { member_id: string; meeting_id: string }[] }];
   const operationalMembers = memberList.map((member) => ({
     ...member,
+    completedMeetingCount: (meetings ?? []).filter((meeting) => {
+      const activationDate = member.membership_activated_at?.slice(0, 10);
+      return meeting.date < new Date().toISOString().slice(0, 10) && (!activationDate || meeting.date >= activationDate);
+    }).length,
     operationalSummary: calculateOperationalSummary({
       membershipStatus: member.membership_status,
       membershipActivatedAt: member.membership_activated_at,
