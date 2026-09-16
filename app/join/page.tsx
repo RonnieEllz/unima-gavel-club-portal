@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
 import { useFormState, useFormStatus } from "react-dom";
+import { useRouter } from "next/navigation";
 import PublicNavbar from "@/components/PublicNavbarClient";
 import Footer from "@/components/Footer";
 import { registerMember, type RegisterFormState } from "@/lib/actions/auth";
@@ -18,6 +20,13 @@ function SubmitButton() {
 
 export default function JoinPage() {
   const [state, formAction] = useFormState(registerMember, initialState);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (state.success) {
+      router.push("/");
+    }
+  }, [state.success, router]);
 
   if (state.success) {
     return (
