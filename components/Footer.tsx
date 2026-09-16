@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -39,7 +40,12 @@ export default function Footer() {
     <footer className="border-t border-gray-200 bg-ink-900 text-gray-300">
       <div className="container-page grid gap-8 py-12 md:grid-cols-3">
         <div>
-          <p className="font-display text-lg font-bold text-white">UNIMA Gavel Club</p>
+          <div className="flex items-center gap-3">
+            <span className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-black">
+              <Image src="/logo.jpg" alt="UNIMA Gavel Club logo" width={48} height={48} className="h-full w-full object-cover object-center" />
+            </span>
+            <p className="font-display text-lg font-bold text-white">UNIMA Gavel Club</p>
+          </div>
           <p className="mt-2 text-sm text-gray-400">
             {settings.footer_description}
           </p>

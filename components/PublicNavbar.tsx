@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { logout } from "@/lib/actions/auth";
 import { getCurrentUserProfile } from "@/lib/data";
@@ -15,8 +16,8 @@ export default async function PublicNavbar() {
     <header className="sticky top-0 z-40 border-b border-maroon-900/10 bg-white/90 backdrop-blur">
       <nav className="container-page flex h-16 items-center justify-between">
         <Link href="/" className="flex items-center gap-2 font-display text-lg font-bold text-maroon-800">
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-maroon-700 text-sm font-bold text-gold-400">
-            UG
+          <span className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-black">
+            <Image src="/logo.jpg" alt="UNIMA Gavel Club logo" width={40} height={40} className="h-full w-full object-cover object-center" priority />
           </span>
           UNIMA Gavel Club
         </Link>

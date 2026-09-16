@@ -1,0 +1,51 @@
+<svg width="1000" height="1000" viewBox="0 0 1000 1000" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1000" height="1000" fill="#05070B"/>
+
+  <g>
+    <circle cx="500" cy="485" r="365" fill="url(#globeFill)" stroke="#E7C667" stroke-width="22"/>
+    <circle cx="500" cy="485" r="338" fill="none" stroke="#F0F0F0" stroke-opacity="0.7" stroke-width="3"/>
+
+    <g opacity="0.95" stroke="#F5F5F5" stroke-width="5" stroke-linecap="round" fill="none">
+      <path d="M500 140V830"/>
+      <path d="M145 485H855"/>
+      <path d="M270 240C345 297 410 324 500 324C590 324 655 297 730 240"/>
+      <path d="M270 730C345 673 410 646 500 646C590 646 655 673 730 730"/>
+      <path d="M195 410C270 454 324 477 390 492C452 506 470 510 500 510C530 510 548 506 610 492C676 477 730 454 805 410"/>
+      <path d="M195 560C270 516 324 493 390 478C452 464 470 460 500 460C530 460 548 464 610 478C676 493 730 516 805 560"/>
+      <path d="M315 200L685 770"/>
+      <path d="M685 200L315 770"/>
+      <path d="M185 300C280 355 346 388 500 388C654 388 720 355 815 300"/>
+      <path d="M185 670C280 615 346 582 500 582C654 582 720 615 815 670"/>
+      <path d="M202 332C260 375 289 398 333 414"/>
+      <path d="M798 332C740 375 711 398 667 414"/>
+      <path d="M202 638C260 595 289 572 333 556"/>
+      <path d="M798 638C740 595 711 572 667 556"/>
+    </g>
+
+    <path d="M720 198C801 242 858 321 870 414C879 484 868 556 830 620C810 651 786 677 760 699L724 746C692 709 670 681 653 650C602 660 557 665 500 665C443 665 398 660 347 650C330 681 308 709 276 746L240 699C214 677 190 651 170 620C132 556 121 484 130 414C142 321 199 242 280 198L360 198C329 226 304 259 288 296C255 337 238 393 238 450C238 523 255 587 288 636C332 704 389 744 500 744C611 744 668 704 712 636C745 587 762 523 762 450C762 393 745 337 712 296C696 259 671 226 640 198L720 198Z" fill="#0A2F4F" fill-opacity="0.28"/>
+
+    <path d="M103 487C105 410 142 343 208 298C238 277 272 261 306 248C298 272 290 298 285 325C259 353 242 385 236 421C231 457 232 492 240 526C247 558 262 588 284 614C269 621 252 629 236 638C190 620 149 573 119 527C109 511 104 499 103 487Z" fill="#0B4067" fill-opacity="0.13"/>
+    <path d="M897 487C895 410 858 343 792 298C762 277 728 261 694 248C702 272 710 298 715 325C741 353 758 385 764 421C769 457 768 492 760 526C753 558 738 588 716 614C731 621 748 629 764 638C810 620 851 573 881 527C891 511 896 499 897 487Z" fill="#0B4067" fill-opacity="0.13"/>
+  </g>
+
+  <g>
+    <path d="M212 233C252 206 294 192 344 188H656C706 192 748 206 788 233L760 279H240L212 233Z" fill="#F5F5F5"/>
+    <path d="M255 202C292 154 356 125 500 125C644 125 708 154 745 202H760C724 150 669 112 603 90C578 82 553 75 500 75C447 75 422 82 397 90C331 112 276 150 240 202H255Z" fill="#F5F5F5"/>
+  </g>
+
+  <g>
+    <rect x="180" y="323" width="640" height="140" rx="12" fill="#F4F4F4"/>
+    <text x="500" y="407" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="74" font-weight="800" letter-spacing="3" fill="#8C0F1F">TOASTMASTERS</text>
+    <text x="500" y="490" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="60" font-weight="800" letter-spacing="1.5" fill="#8C0F1F">INTERNATIONAL</text>
+    <path d="M224 500H776" stroke="#8C0F1F" stroke-width="6" stroke-linecap="round"/>
+  </g>
+
+  <defs>
+    <radialGradient id="globeFill" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(388 280) rotate(42) scale(640)">
+      <stop offset="0" stop-color="#2E79B9"/>
+      <stop offset="0.4" stop-color="#0F4F7F"/>
+      <stop offset="0.8" stop-color="#0B3C64"/>
+      <stop offset="1" stop-color="#0A2A47"/>
+    </radialGradient>
+  </defs>
+</svg>
