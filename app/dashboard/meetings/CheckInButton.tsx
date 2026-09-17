@@ -21,7 +21,7 @@ export default function CheckInButton({
 
   if (state.success) {
     return (
-      <span className="rounded-md bg-green-100 px-4 py-2 text-sm font-semibold text-green-700">
+      <span className="block rounded-md bg-green-100 px-4 py-2 text-sm font-semibold text-green-700 sm:inline-block">
         ✓ Attendance recorded successfully
       </span>
     );
@@ -29,18 +29,18 @@ export default function CheckInButton({
 
   if (!canCheckIn) {
     return (
-      <span className="rounded-md bg-gray-100 px-4 py-2 text-sm text-gray-500">Active members can check in to meetings.</span>
+      <span className="block rounded-md bg-gray-100 px-4 py-2 text-sm text-gray-500 sm:inline-block">Active members can check in to meetings.</span>
     );
   }
 
   if (!attendanceOpen) {
     return (
-      <span className="rounded-md bg-gray-100 px-4 py-2 text-sm text-gray-500">Check-in not open</span>
+      <span className="block rounded-md bg-gray-100 px-4 py-2 text-sm text-gray-500 sm:inline-block">Check-in not open</span>
     );
   }
 
   return (
-    <div>
+    <div className="w-full sm:w-auto">
       <button
         onClick={() =>
           startTransition(async () => {
@@ -49,7 +49,7 @@ export default function CheckInButton({
           })
         }
         disabled={isPending}
-        className="btn-primary !px-4 !py-2 text-sm"
+        className="btn-primary w-full !px-4 !py-2 text-sm sm:w-auto"
       >
         {isPending ? "Checking in…" : "CHECK IN TO MEETING"}
       </button>
