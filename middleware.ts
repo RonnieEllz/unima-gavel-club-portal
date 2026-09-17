@@ -1,6 +1,6 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { canAccessAdminPath } from "@/lib/role-policy";
+import { canAccessAdminPath, isOperationalMemberRoute } from "@/lib/role-policy";
 
 // Routes that require the visitor to simply be logged in.
 const MEMBER_ROUTES = ["/dashboard"];
@@ -57,6 +57,18 @@ export async function middleware(request: NextRequest) {
 
     if (!canAccessAdminPath(adminRole?.role ?? null, path)) {
       return NextResponse.redirect(new URL("/dashboard?error=not_admin", request.url));
+    }
+  }
+
+  if (user && isOperationalMemberRoute(path)) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("membership_status")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (profile?.membership_status !== "active") {
+      return NextResponse.redirect(new URL("/dashboard?error=member_not_active", request.url));
     }
   }
 

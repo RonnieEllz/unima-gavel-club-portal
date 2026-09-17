@@ -4,6 +4,7 @@ import { logout } from "@/lib/actions/auth";
 import { getCurrentUserProfile } from "@/lib/data";
 
 const links = [
+  { href: "/", label: "Home" },
   { href: "/about", label: "About" },
   { href: "/stories", label: "Stories" },
   { href: "/updates", label: "Updates" },

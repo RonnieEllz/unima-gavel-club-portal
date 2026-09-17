@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import CheckInButton from "./CheckInButton";
+import { canAccessOperationalFeatures } from "@/lib/role-policy";
 import type { Meeting } from "@/types/database";
 
 export default async function MeetingsPage() {
@@ -7,6 +8,14 @@ export default async function MeetingsPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("membership_status")
+    .eq("id", user?.id ?? "")
+    .maybeSingle();
+
+  const canCheckIn = canAccessOperationalFeatures(profile?.membership_status ?? null);
 
   const { data: meetingData, error: meetingsError } = await supabase
     .from("meetings")
@@ -53,6 +62,7 @@ export default async function MeetingsPage() {
               meetingId={meeting.id}
               alreadyCheckedIn={checkedInSet.has(meeting.id)}
               attendanceOpen={meeting.attendance_open}
+              canCheckIn={canCheckIn}
             />
           </div>
         )) : <p className="text-gray-500">No meetings have been created yet.</p>}

@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { updateAboutPageSettings, updateFooterSettings, updateLandingPageSettings, updateSiteAnnouncement } from "@/lib/actions/admin";
+import { updateAboutPageSettings, updateFooterSettings, updateLandingPageSettings, updateSiteAnnouncement, updateWhatsAppGroupLink } from "@/lib/actions/admin";
 import { normalizeAnnouncementInput } from "@/lib/announcement";
 import { defaultLandingPageSettings } from "@/lib/data";
 import ImageUploadField from "@/components/admin/ImageUploadField";
@@ -7,16 +7,21 @@ import SettingsForm from "@/components/admin/SettingsForm";
 
 export default async function AdminSettingsPage() {
   const supabase = createClient();
-  const [{ data: setting }, { data: announcementSetting }] = await Promise.all([
+  const [{ data: setting }, { data: announcementSetting }, { data: whatsappSetting }] = await Promise.all([
     supabase
-    .from("landing_page_settings")
-    .select("*")
-    .eq("id", true)
-    .maybeSingle(),
+      .from("landing_page_settings")
+      .select("*")
+      .eq("id", true)
+      .maybeSingle(),
     supabase
       .from("site_settings")
       .select("value")
       .eq("key", "announcement_text")
+      .maybeSingle(),
+    supabase
+      .from("site_settings")
+      .select("value")
+      .eq("key", "whatsapp_group_link")
       .maybeSingle(),
   ]);
   const values = { ...defaultLandingPageSettings, ...(setting ?? {}) };
@@ -41,6 +46,11 @@ export default async function AdminSettingsPage() {
     const normalized = normalizeAnnouncementInput(String(formData.get("announcement") ?? ""));
     if (!normalized.valid) return { error: "Announcement must be 1-500 characters long." };
     return updateSiteAnnouncement(normalized.text);
+  };
+
+  const submitWhatsAppLink = async (formData: FormData) => {
+    "use server";
+    return updateWhatsAppGroupLink(formData);
   };
 
   return (
@@ -114,6 +124,8 @@ export default async function AdminSettingsPage() {
         <input name="footer_email" type="email" defaultValue={values.footer_email} placeholder="Footer email" className="input-field" required />
         <input name="footer_phone_1" type="tel" defaultValue={values.footer_phone_1 ?? ""} placeholder="Phone number 1 (optional)" className="input-field" />
         <input name="footer_phone_2" type="tel" defaultValue={values.footer_phone_2 ?? ""} placeholder="Phone number 2 (optional)" className="input-field" />
+        <input name="footer_instagram_url" type="url" defaultValue={values.footer_instagram_url ?? ""} placeholder="Instagram profile URL (optional)" className="input-field" />
+        <input name="footer_tiktok_url" type="url" defaultValue={values.footer_tiktok_url ?? ""} placeholder="TikTok profile URL (optional)" className="input-field" />
         <input name="footer_copyright" defaultValue={values.footer_copyright} placeholder="Copyright text" className="input-field" required />
       </SettingsForm>
 
@@ -130,6 +142,22 @@ export default async function AdminSettingsPage() {
             placeholder="Add an important club notice for everyone visiting the site."
             className="input-field"
             maxLength={500}
+          />
+        </div>
+      </SettingsForm>
+
+      <SettingsForm action={submitWhatsAppLink} buttonLabel="Save WhatsApp link">
+        <div>
+          <label htmlFor="whatsapp_group_link" className="label-field">
+            WhatsApp group link for new members
+          </label>
+          <input
+            id="whatsapp_group_link"
+            name="whatsapp_group_link"
+            type="url"
+            defaultValue={whatsappSetting?.value ?? ""}
+            placeholder="https://chat.whatsapp.com/..."
+            className="input-field"
           />
         </div>
       </SettingsForm>

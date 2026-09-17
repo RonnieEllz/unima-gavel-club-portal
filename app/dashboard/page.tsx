@@ -5,6 +5,7 @@ import {
   getActiveSemesterMeetings,
   getUpcomingMeetings,
   getLatestPosts,
+  getWhatsAppGroupLink,
 } from "@/lib/data";
 import { calculateOperationalSummary } from "@/lib/operational-status";
 import UpdateCard from "@/components/UpdateCard";
@@ -24,18 +25,24 @@ export default async function DashboardPage() {
   const current = await getCurrentUserProfile();
   const user = current.user;
   const profile = current.profile as Profile | null;
-  const [history, semesterMeetings, upcomingMeetings, updates, stories] = await Promise.all([
+  const [history, semesterMeetings, upcomingMeetings, updates, stories, whatsappGroupLink] = await Promise.all([
     user ? getMemberAttendanceHistory(user.id) : Promise.resolve([]),
     getActiveSemesterMeetings(),
     getUpcomingMeetings(1),
     getLatestPosts("update", 2),
     getLatestPosts("story", 2),
+    getWhatsAppGroupLink(),
   ]);
 
   const semesterMeetingIds = new Set(semesterMeetings.map((meeting) => meeting.id));
   const today = new Date().toISOString().slice(0, 10);
   const completedSemesterMeetingCount = semesterMeetings.filter((meeting) => meeting.date < today).length;
   const presentCount = history.filter((record) => semesterMeetingIds.has(record.meeting_id)).length;
+  const checkedInMeetingIds = new Set(history.map((record) => record.meeting_id));
+  const nextMeeting = upcomingMeetings[0] ?? null;
+  const nextMeetingAlreadyCheckedIn = nextMeeting ? checkedInMeetingIds.has(nextMeeting.id) : false;
+  const isNewMember = profile?.membership_status === "pending";
+  const showWhatsAppCallout = !!whatsappGroupLink && isNewMember;
   const operationalSummary = profile && profile.membership_status === "active"
     ? calculateOperationalSummary({
         membershipStatus: profile.membership_status,
@@ -97,10 +104,35 @@ export default async function DashboardPage() {
             <p className="mt-1 text-xs text-gray-500 sm:text-sm">Keep up with the club calendar.</p>
           </div>
         </div>
-        {upcomingMeetings[0] ? (
-          <MeetingCard meeting={upcomingMeetings[0]} />
-        ) : (
-          <p className="rounded-md bg-gray-50 px-4 py-3 text-sm text-gray-500">No upcoming meeting has been scheduled.</p>
+        {nextMeeting ? (
+          <MeetingCard
+            meeting={nextMeeting}
+            alreadyCheckedIn={nextMeetingAlreadyCheckedIn}
+            showCheckIn
+            canCheckIn={profile?.membership_status === "active"}
+          />
+        ) : !isNewMember ? (
+          <div className="card flex flex-col gap-3 p-5">
+            <h3 className="font-semibold text-maroon-800">Join the club community</h3>
+            <p className="text-sm text-gray-600">No meeting has been scheduled yet for this period. You can still join the member WhatsApp group and stay connected.</p>
+            {whatsappGroupLink ? (
+              <a href={whatsappGroupLink} target="_blank" rel="noreferrer noopener" className="inline-flex w-fit items-center rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700">
+                Join WhatsApp group
+              </a>
+            ) : (
+              <p className="text-sm text-gray-500">There is currently no WhatsApp group link configured for members.</p>
+            )}
+          </div>
+        ) : null}
+
+        {showWhatsAppCallout && whatsappGroupLink && (
+          <div className="card flex flex-col gap-3 p-5">
+            <h3 className="font-semibold text-maroon-800">Welcome new member</h3>
+            <p className="text-sm text-gray-600">Join the WhatsApp group to stay connected with the club, hear updates, and get support as you begin your journey with UNIMA Gavel Club.</p>
+            <a href={whatsappGroupLink} target="_blank" rel="noreferrer noopener" className="inline-flex w-fit items-center rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700">
+              Join WhatsApp group
+            </a>
+          </div>
         )}
       </section>
 

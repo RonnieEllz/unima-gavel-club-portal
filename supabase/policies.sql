@@ -341,6 +341,11 @@ create policy "site_settings_select_public_announcement"
   to anon, authenticated
   using (key = 'announcement_text');
 
+create policy "site_settings_select_public_whatsapp_group_link"
+  on site_settings for select
+  to anon, authenticated
+  using (key = 'whatsapp_group_link');
+
 -- Landing configuration contains only public-facing content.
 create policy "landing_page_settings_select_public"
   on landing_page_settings for select

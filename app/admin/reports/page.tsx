@@ -24,12 +24,15 @@ export default async function AdminReportsPage({
   const invalidRange = Boolean(from && to && from > to);
   const supabase = createClient();
   const activeSemester = await getActiveSemester();
+  const noActiveSemesterMessage = !activeSemester
+    ? "No active semester is configured. Create or activate a semester before running attendance reports."
+    : null;
   let meetings: { id: string; title: string; date: string; time: string; venue: string }[] = [];
   let attendance: { id: string; meeting_id: string; member_id: string; checked_in_at: string }[] = [];
   let eligibleMembers: { id: string; membership_activated_at: string | null; payment_verified: boolean }[] = [];
   let errorMessage: string | null = null;
 
-  if (!invalidRange) {
+  if (!invalidRange && activeSemester) {
     let membersQuery = supabase.from("profiles").select("id, membership_activated_at, payment_verified").eq("membership_status", "active");
     if (program) membersQuery = membersQuery.ilike("program", `%${program}%`);
     if (Number.isInteger(year) && year >= 1 && year <= 5) membersQuery = membersQuery.eq("year_of_study", year);
@@ -42,8 +45,7 @@ export default async function AdminReportsPage({
       .select("id, title, date, time, venue")
       .order("date", { ascending: false })
       .order("time", { ascending: false });
-    if (activeSemester) meetingsQuery = meetingsQuery.eq("semester_id", activeSemester.id);
-    else meetingsQuery = meetingsQuery.eq("id", "00000000-0000-0000-0000-000000000000");
+    meetingsQuery = meetingsQuery.eq("semester_id", activeSemester.id);
     if (from) meetingsQuery = meetingsQuery.gte("date", from);
     if (to) meetingsQuery = meetingsQuery.lt("date", nextDate(to));
     if (q) meetingsQuery = meetingsQuery.or(`title.ilike.%${q}%,venue.ilike.%${q}%,description.ilike.%${q}%`);
@@ -107,6 +109,9 @@ export default async function AdminReportsPage({
       </form>
 
       {invalidRange && <p className="mt-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">The start date cannot be after the end date.</p>}
+      {noActiveSemesterMessage && (
+        <p className="mt-4 rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-800">{noActiveSemesterMessage}</p>
+      )}
       {errorMessage && (
         <p className="mt-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
           Attendance data could not be loaded: {errorMessage}

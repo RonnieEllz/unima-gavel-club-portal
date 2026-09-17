@@ -889,6 +889,54 @@ export async function updateSiteAnnouncement(message: string) {
   return { success: true };
 }
 
+export async function updateWhatsAppGroupLink(formData: FormData) {
+  const value = String(formData.get("whatsapp_group_link") ?? "").trim();
+  if (!value) {
+    return { error: "WhatsApp group link cannot be empty." };
+  }
+
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    return { error: "Please enter a valid URL for the WhatsApp group link." };
+  }
+
+  if (!["http:", "https:"].includes(url.protocol)) {
+    return { error: "The WhatsApp link must start with http:// or https://" };
+  }
+
+  const supabase = createClient();
+  const auth = await getAuthContext();
+  if (!auth || !canManageOperations(auth.role as AdminRoleName)) {
+    return { error: "Only operations administrators can update the WhatsApp group link." };
+  }
+
+  const { data: previous } = await supabase
+    .from("site_settings")
+    .select("value")
+    .eq("key", "whatsapp_group_link")
+    .maybeSingle();
+
+  const { error } = await supabase
+    .from("site_settings")
+    .upsert({ key: "whatsapp_group_link", value, updated_by: auth.userId }, { onConflict: "key" });
+
+  if (error) return { error: error.message };
+
+  await recordAuditEvent({
+    action: "whatsapp_group_link_updated",
+    entityType: "site_setting",
+    entityId: "whatsapp_group_link",
+    beforeData: previous ? { value: previous.value } : null,
+    afterData: { value },
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/admin/settings");
+  return { success: true };
+}
+
 async function updateLandingSettingsSection(
   formData: FormData,
   schema: z.AnyZodObject,
@@ -958,7 +1006,7 @@ export async function updateFooterSettings(formData: FormData) {
   return updateLandingSettingsSection(
     formData,
     footerSettingsSchema,
-    ["footer_description", "footer_address", "footer_email", "footer_phone_1", "footer_phone_2", "footer_copyright"],
+    ["footer_description", "footer_address", "footer_email", "footer_phone_1", "footer_phone_2", "footer_instagram_url", "footer_tiktok_url", "footer_copyright"],
     "footer_settings_updated"
   );
 }

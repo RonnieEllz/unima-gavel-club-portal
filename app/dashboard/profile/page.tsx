@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getMemberAttendanceHistory, getActiveSemesterMeetings } from "@/lib/data";
 import { calculateOperationalSummary } from "@/lib/operational-status";
+import { canAccessOperationalFeatures } from "@/lib/role-policy";
 import type { Profile } from "@/types/database";
 
 export default async function ProfilePage() {
@@ -20,7 +21,8 @@ export default async function ProfilePage() {
     getMemberAttendanceHistory(user.id),
     getActiveSemesterMeetings(),
   ]);
-  const operationalSummary = profile.membership_status === "active"
+  const canViewOperationalSummary = canAccessOperationalFeatures(profile.membership_status);
+  const operationalSummary = canViewOperationalSummary
     ? calculateOperationalSummary({
         membershipStatus: profile.membership_status,
         membershipActivatedAt: profile.membership_activated_at,

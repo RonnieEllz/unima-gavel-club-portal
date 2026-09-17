@@ -7,10 +7,12 @@ export default function CheckInButton({
   meetingId,
   alreadyCheckedIn,
   attendanceOpen,
+  canCheckIn,
 }: {
   meetingId: string;
   alreadyCheckedIn: boolean;
   attendanceOpen: boolean;
+  canCheckIn: boolean;
 }) {
   const [isPending, startTransition] = useTransition();
   const [state, setState] = useState<{ success?: boolean; error?: string }>({
@@ -22,6 +24,12 @@ export default function CheckInButton({
       <span className="rounded-md bg-green-100 px-4 py-2 text-sm font-semibold text-green-700">
         ✓ Attendance recorded successfully
       </span>
+    );
+  }
+
+  if (!canCheckIn) {
+    return (
+      <span className="rounded-md bg-gray-100 px-4 py-2 text-sm text-gray-500">Active members can check in to meetings.</span>
     );
   }
 

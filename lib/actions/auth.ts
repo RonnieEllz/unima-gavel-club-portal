@@ -55,7 +55,7 @@ export async function registerMember(
     return { error: error.message };
   }
 
-  return { success: true };
+  redirect("/dashboard");
 }
 
 export type LoginFormState = { error?: string };

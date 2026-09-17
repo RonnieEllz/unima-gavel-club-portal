@@ -30,25 +30,22 @@ export default function AchievementBadges({ attendedCount, completedMeetingCount
   const currentBadge = perfectAttendance
     ? badges[badges.length - 1]
     : badges.find((badge) => !badge.earned) ?? badges[badges.length - 1];
-  const progress = currentBadge.name === "Perfect Attendance"
-    ? `${attendedCount}/${completedMeetingCount} completed meetings attended`
-    : `${Math.min(attendedCount, currentBadge.threshold)}/${currentBadge.threshold} meetings attended`;
 
   return (
     <section className="mt-3 border-t border-gray-100 pt-3 sm:mt-5 sm:pt-5" aria-labelledby="achievement-heading">
       <div className="flex items-end justify-between gap-4">
         <div>
-          <h2 id="achievement-heading" className="font-display text-lg font-bold text-maroon-800 sm:text-xl">Current achievement</h2>
-          <p className="mt-1 text-xs text-gray-500">Earned from active-semester completed meetings.</p>
+          <h2 id="achievement-heading" className="font-display text-lg font-bold text-maroon-800 sm:text-xl">Member progress</h2>
         </div>
-        <span className="text-xs font-semibold text-gray-500">{progress}</span>
       </div>
       <div className="achievement-badge achievement-badge-earned mt-3 flex items-center gap-3 text-left sm:mt-4 sm:gap-4" title={`${currentBadge.name}: ${currentBadge.requirement}`}>
         <BadgeFigure variant={currentBadge.variant} earned={currentBadge.earned} expression={currentBadge.expression} />
         <div>
           <p className="text-base font-bold text-maroon-800">{currentBadge.name}</p>
           <p className="mt-1 text-sm text-gray-600">{currentBadge.requirement}</p>
-          <p className="mt-2 text-xs font-semibold text-maroon-700">{perfectAttendance ? "Achievement earned" : `Next goal: ${progress}`}</p>
+          <p className="mt-2 text-xs font-semibold text-maroon-700">
+            {perfectAttendance ? "Achievement earned" : "Next goal"}
+          </p>
         </div>
       </div>
     </section>

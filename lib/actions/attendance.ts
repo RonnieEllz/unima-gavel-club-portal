@@ -21,6 +21,20 @@ export async function checkInToMeeting(meetingId: string): Promise<CheckInResult
     return { error: "You must be logged in to check in." };
   }
 
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("membership_status")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (profileError) {
+    return { error: "Unable to confirm your member status." };
+  }
+
+  if (profile?.membership_status !== "active") {
+    return { error: "Only active members can check in to meetings." };
+  }
+
   // RLS also enforces: attendance_open must be true, and member_id must
   // equal auth.uid(). The unique(member_id, meeting_id) constraint prevents
   // double check-in even under a race condition.

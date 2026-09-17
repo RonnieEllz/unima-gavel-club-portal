@@ -241,6 +241,8 @@
     footer_email text not null default 'gavelclub@unima.ac.mw',
     footer_phone_1 text,
     footer_phone_2 text,
+    footer_instagram_url text,
+    footer_tiktok_url text,
     footer_copyright text not null default 'UNIMA Toastmasters Gavel Club. All rights reserved.',
     show_announcement boolean not null default true,
     show_intro boolean not null default true,

@@ -59,6 +59,8 @@ export const landingPageSettingsSchema = z.object({
   footer_email: z.string().trim().email().max(240),
   footer_phone_1: z.string().trim().max(40),
   footer_phone_2: z.string().trim().max(40),
+  footer_instagram_url: z.string().trim().max(240),
+  footer_tiktok_url: z.string().trim().max(240),
   footer_copyright: z.string().trim().min(2).max(240),
   show_announcement: z.boolean(),
   show_intro: z.boolean(),
@@ -104,6 +106,8 @@ export const footerSettingsSchema = landingPageSettingsSchema.pick({
   footer_email: true,
   footer_phone_1: true,
   footer_phone_2: true,
+  footer_instagram_url: true,
+  footer_tiktok_url: true,
   footer_copyright: true,
 });
 

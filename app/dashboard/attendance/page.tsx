@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { canAccessOperationalFeatures } from "@/lib/role-policy";
 import type { Meeting } from "@/types/database";
 
 export default async function AttendanceHistoryPage() {
@@ -8,6 +9,23 @@ export default async function AttendanceHistoryPage() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("membership_status")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (!canAccessOperationalFeatures(profile?.membership_status ?? null)) {
+    return (
+      <div className="card p-6">
+        <h1 className="font-display text-3xl font-bold text-maroon-800">My Attendance</h1>
+        <p className="mt-3 text-sm text-gray-600">
+          Attendance history is available to active members only.
+        </p>
+      </div>
+    );
+  }
 
   const { data: records } = await supabase
     .from("attendance")

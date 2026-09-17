@@ -9,4 +9,6 @@ alter table public.landing_page_settings
   add column if not exists footer_email text not null default 'gavelclub@unima.ac.mw',
   add column if not exists footer_phone_1 text,
   add column if not exists footer_phone_2 text,
+  add column if not exists footer_instagram_url text,
+  add column if not exists footer_tiktok_url text,
   add column if not exists footer_copyright text not null default 'UNIMA Toastmasters Gavel Club. All rights reserved.';

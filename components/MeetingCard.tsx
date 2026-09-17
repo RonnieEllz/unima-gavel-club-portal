@@ -5,10 +5,12 @@ export default function MeetingCard({
   meeting,
   alreadyCheckedIn = false,
   showCheckIn = false,
+  canCheckIn = true,
 }: {
   meeting: Meeting;
   alreadyCheckedIn?: boolean;
   showCheckIn?: boolean;
+  canCheckIn?: boolean;
 }) {
   const date = new Date(`${meeting.date}T${meeting.time}`);
   return (
@@ -29,6 +31,7 @@ export default function MeetingCard({
           meetingId={meeting.id}
           alreadyCheckedIn={alreadyCheckedIn}
           attendanceOpen={meeting.attendance_open}
+          canCheckIn={canCheckIn}
         />
       ) : meeting.attendance_open ? (
         <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">

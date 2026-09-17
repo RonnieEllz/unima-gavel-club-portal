@@ -124,6 +124,8 @@ export interface LandingPageSettings {
   footer_email: string;
   footer_phone_1: string | null;
   footer_phone_2: string | null;
+  footer_instagram_url: string | null;
+  footer_tiktok_url: string | null;
   footer_copyright: string;
   show_announcement: boolean;
   show_intro: boolean;

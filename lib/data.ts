@@ -23,6 +23,8 @@ export const defaultLandingPageSettings: Omit<LandingPageSettings, "id" | "updat
   footer_email: "gavelclub@unima.ac.mw",
   footer_phone_1: null,
   footer_phone_2: null,
+  footer_instagram_url: null,
+  footer_tiktok_url: null,
   footer_copyright: "UNIMA Toastmasters Gavel Club. All rights reserved.",
   show_announcement: true,
   show_intro: true,
@@ -99,6 +101,17 @@ export async function getSiteAnnouncement(): Promise<string | null> {
     .maybeSingle();
 
   return (data?.value as string | null) ?? null;
+}
+
+export async function getWhatsAppGroupLink(): Promise<string> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("site_settings")
+    .select("value")
+    .eq("key", "whatsapp_group_link")
+    .maybeSingle();
+
+  return (data?.value as string | null) ?? "";
 }
 
 export async function getUpcomingMeetings(limit = 5): Promise<Meeting[]> {

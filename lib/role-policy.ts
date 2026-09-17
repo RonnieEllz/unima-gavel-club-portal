@@ -1,4 +1,24 @@
-import type { AdminRoleName } from "@/types/database";
+import type { AdminRoleName, MembershipStatus } from "@/types/database";
+
+export function isOrdinaryMemberStatus(status: MembershipStatus | null | undefined) {
+  return status === "pending" || status === "active" || status === "inactive" || status === "rejected" || status === "alumni";
+}
+
+export function canAccessMemberProfile(status: MembershipStatus | null | undefined) {
+  return isOrdinaryMemberStatus(status);
+}
+
+export function canAccessMemberDashboard(status: MembershipStatus | null | undefined) {
+  return isOrdinaryMemberStatus(status);
+}
+
+export function canAccessOperationalFeatures(status: MembershipStatus | null | undefined) {
+  return status === "active";
+}
+
+export function isOperationalMemberRoute(pathname: string) {
+  return pathname.startsWith("/dashboard/attendance") || pathname.startsWith("/dashboard/meetings");
+}
 
 export function canManageOperations(role: AdminRoleName | null) {
   return role === "super_admin" || role === "administrator" || role === "operations_admin";
@@ -9,7 +29,7 @@ export function canManageSemesters(role: AdminRoleName | null) {
 }
 
 export function canManageSettings(role: AdminRoleName | null) {
-  return role === "super_admin" || role === "administrator";
+  return role === "super_admin" || role === "administrator" || role === "operations_admin";
 }
 
 export function canViewAudit(role: AdminRoleName | null) {
