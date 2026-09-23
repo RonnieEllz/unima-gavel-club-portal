@@ -68,7 +68,7 @@ export default function PublicNavbarClient() {
       <nav className="container-page relative flex h-16 items-center justify-between">
         <Link href="/" className="flex items-center gap-2 font-display text-lg font-bold text-maroon-800">
           <span className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-black">
-            <Image src="/logo.jpg" alt="UNIMA Gavel Club logo" width={40} height={40} className="h-full w-full object-cover object-center" priority />
+            <Image src="/logo.jpg" alt="UNIMA Gavel Club logo" width={40} height={40} className="h-full w-full scale-[1.14] object-cover object-center" priority />
           </span>
           UNIMA Gavel Club
         </Link>

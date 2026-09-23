@@ -8,9 +8,9 @@ export const metadata: Metadata = {
   description:
     "A student community at the University of Malawi focused on developing communication, public speaking, leadership and confidence.",
   icons: {
-    icon: "/logo.svg",
-    shortcut: "/logo.svg",
-    apple: "/logo.svg",
+    icon: "/logo.jpg",
+    shortcut: "/logo.jpg",
+    apple: "/logo.jpg",
   },
 };
 

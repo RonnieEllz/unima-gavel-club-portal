@@ -71,7 +71,7 @@ export default function Footer() {
         <div>
           <div className="flex items-center gap-3">
             <span className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-black">
-              <Image src="/logo.jpg" alt="UNIMA Gavel Club logo" width={48} height={48} className="h-full w-full object-cover object-center" />
+              <Image src="/logo.jpg" alt="UNIMA Gavel Club logo" width={48} height={48} className="h-full w-full scale-[1.14] object-cover object-center" />
             </span>
             <p className="font-display text-lg font-bold text-white">UNIMA Gavel Club</p>
           </div>
