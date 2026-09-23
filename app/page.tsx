@@ -5,10 +5,11 @@ import Footer from "@/components/Footer";
 import StoryCard from "@/components/StoryCard";
 import UpdateCard from "@/components/UpdateCard";
 import MeetingCard from "@/components/MeetingCard";
-import { getUpcomingMeeting, getLatestPosts, getGalleryPreview, getSiteAnnouncement, getLandingPageSettings } from "@/lib/data";
+import { getUpcomingMeeting, getLatestPosts, getGalleryPreview, getSiteAnnouncement, getLandingPageSettings, getCurrentUserProfile } from "@/lib/data";
 
 export default async function LandingPage() {
-  const [meeting, stories, updates, gallery, announcement, settings] = await Promise.all([
+  const [{ user }, meeting, stories, updates, gallery, announcement, settings] = await Promise.all([
+    getCurrentUserProfile(),
     getUpcomingMeeting(),
     getLatestPosts("story", 3),
     getLatestPosts("update", 3),
@@ -43,14 +44,16 @@ export default async function LandingPage() {
           <p className="mx-auto mt-6 max-w-2xl text-lg text-maroon-50">
             {settings.hero_description}
           </p>
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-            <Link href="/join" className="btn-gold">
-              Join the Club
-            </Link>
-            <Link href="/login" className="btn-secondary !border-white !bg-transparent !text-white hover:!bg-white/10">
-              Member Login
-            </Link>
-          </div>
+          {!user && (
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+              <Link href="/join" className="btn-gold">
+                Join the Club
+              </Link>
+              <Link href="/login" className="btn-secondary !border-white !bg-transparent !text-white hover:!bg-white/10">
+                Member Login
+              </Link>
+            </div>
+          )}
 
           {settings.show_announcement && announcement && (
             <div className="mx-auto mt-8 max-w-2xl rounded-full border border-gold-200/50 bg-white/10 px-4 py-3 text-sm text-gold-100 shadow-lg backdrop-blur-sm">

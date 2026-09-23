@@ -35,10 +35,20 @@ function TikTokIcon() {
 
 export default function Footer() {
   const [settings, setSettings] = useState<FooterSettings>(defaultFooter);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
     let active = true;
+
+    void supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!active) return;
+      setIsLoggedIn(Boolean(session?.user));
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (active) setIsLoggedIn(Boolean(session?.user));
+    });
 
     void supabase
       .from("landing_page_settings")
@@ -51,6 +61,7 @@ export default function Footer() {
 
     return () => {
       active = false;
+      listener.subscription.unsubscribe();
     };
   }, []);
 
@@ -74,7 +85,7 @@ export default function Footer() {
             <li><a href="/about" className="hover:text-white">About the Club</a></li>
             <li><a href="/stories" className="hover:text-white">Stories</a></li>
             <li><a href="/updates" className="hover:text-white">Updates</a></li>
-            <li><a href="/join" className="hover:text-white">Join Us</a></li>
+            {!isLoggedIn && <li><a href="/join" className="hover:text-white">Join Us</a></li>}
           </ul>
         </div>
         <div>
