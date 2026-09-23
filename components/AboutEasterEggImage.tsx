@@ -43,7 +43,7 @@ export default function AboutEasterEggImage({ src, alt }: AboutEasterEggImagePro
               ×
             </button>
             <p id="about-easter-egg-title" className="text-left text-base leading-relaxed text-white sm:text-lg">
-              Toastmaster UNIMA found Ronald Longwe in 2024 or 2023, I cant remember, became the VPPR in 2025 and graduated in 2026. He build this as part of his LEGACY after he left UNIMA just because. With everything that happened, Nothing Happened. and therefore went to look for other THINGS Mate, Many Things. Also he was still terrified to speaking in public, lol even thou it was all about PUBLIC SPEAKING. Shout out to Riri(Oriana), Chizard(Chisomo), Nat(Natalie) and Kero(Lusekero), these toastmasters made this tenure fun.
+              TOASTMASTERS UNIMA found Ronald Longwe in 2024 or 2023, I cant remember, became the VPPR in 2025 and graduated in 2026. He build this as part of his LEGACY after he left UNIMA just because. With everything that happened, Nothing Happened. and therefore went to look for other THINGS Mate, Many Things. Also he was still terrified to speaking in public, lol even thou it was all about PUBLIC SPEAKING. Shout out to Riri(Oriana), Chizard(Chisomo), Nat(Natalie) and Kero(Lusekero), these TOASTMASTERS made this tenure fun.
             </p>
           </div>
         </div>,
