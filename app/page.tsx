@@ -5,7 +5,6 @@ import Footer from "@/components/Footer";
 import StoryCard from "@/components/StoryCard";
 import UpdateCard from "@/components/UpdateCard";
 import MeetingCard from "@/components/MeetingCard";
-import GalleryLightbox from "@/components/GalleryLightbox";
 import { getUpcomingMeeting, getLatestPosts, getGalleryPreview, getSiteAnnouncement, getLandingPageSettings, getCurrentUserProfile } from "@/lib/data";
 
 export default async function LandingPage() {
@@ -169,7 +168,11 @@ export default async function LandingPage() {
                 </a>
               )}
 
-              <GalleryLightbox images={galleryCards.filter((g, index) => !(driveUrl && index === 0))} />
+              {galleryCards.filter((g, index) => !(driveUrl && index === 0)).map((g) => (
+                <div key={g.id} className="relative aspect-square overflow-hidden rounded-lg bg-maroon-100">
+                  <Image src={g.image_url} alt={g.caption ?? "Gavel Club photo"} fill className="object-cover" />
+                </div>
+              ))}
             </div>
           );
         })() : (

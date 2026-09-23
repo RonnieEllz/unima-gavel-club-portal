@@ -7,6 +7,11 @@ export const metadata: Metadata = {
   title: "UNIMA Gavel Club | University of Malawi Toastmasters",
   description:
     "A student community at the University of Malawi focused on developing communication, public speaking, leadership and confidence.",
+  icons: {
+    icon: "/logo.svg",
+    shortcut: "/logo.svg",
+    apple: "/logo.svg",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
