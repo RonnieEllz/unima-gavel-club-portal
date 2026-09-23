@@ -86,7 +86,6 @@ export interface Post {
 export interface GalleryImage {
   id: string;
   image_url: string;
-  external_link: string | null;
   caption: string | null;
   category: string | null;
   is_featured: boolean;
@@ -134,6 +133,7 @@ export interface LandingPageSettings {
   show_stories: boolean;
   show_updates: boolean;
   show_gallery: boolean;
+  gallery_drive_url: string | null;
   seo_title: string;
   seo_description: string;
   social_image: string | null;

@@ -141,30 +141,41 @@ export default async function LandingPage() {
       {settings.show_gallery && <section className="container-page py-16">
         <h2 className="font-display text-3xl font-bold text-maroon-800">Photo Gallery</h2>
         <p className="mt-2 text-gray-600">Moments from our meetings, trainings and events.</p>
-        {gallery.length > 0 ? (
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {gallery.map((g) => {
-              const card = (
+        {gallery.length > 0 ? (() => {
+          const driveUrl = settings.gallery_drive_url?.trim();
+          const galleryCards = [...gallery];
+
+          return (
+            <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {driveUrl && (
+                <a
+                  href={driveUrl}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="group relative block overflow-hidden rounded-lg border border-dashed border-maroon-300 bg-maroon-50 focus:outline-none focus:ring-2 focus:ring-maroon-500"
+                  aria-label="View more club photos"
+                >
+                  <div className="relative aspect-square overflow-hidden rounded-lg bg-maroon-100">
+                    <Image src={galleryCards[0]?.image_url ?? "https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=500&q=80"} alt="More club photos" fill className="object-cover opacity-90 transition duration-200 group-hover:scale-105" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                    <div className="absolute inset-x-0 bottom-0 p-3 text-left">
+                      <span className="inline-flex rounded-full bg-white/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-maroon-800">
+                        View more
+                      </span>
+                      <p className="mt-2 text-sm font-semibold text-white">Club photo archive</p>
+                    </div>
+                  </div>
+                </a>
+              )}
+
+              {galleryCards.filter((g, index) => !(driveUrl && index === 0)).map((g) => (
                 <div key={g.id} className="relative aspect-square overflow-hidden rounded-lg bg-maroon-100">
                   <Image src={g.image_url} alt={g.caption ?? "Gavel Club photo"} fill className="object-cover" />
-                  {g.external_link && (
-                    <span className="absolute bottom-2 right-2 rounded-full bg-black/70 px-2 py-1 text-[10px] font-semibold tracking-wide text-white">
-                      View more
-                    </span>
-                  )}
                 </div>
-              );
-
-              if (!g.external_link) return card;
-
-              return (
-                <a key={g.id} href={g.external_link} target="_blank" rel="noreferrer noopener" className="group relative block overflow-hidden rounded-lg focus:outline-none focus:ring-2 focus:ring-maroon-500">
-                  {card}
-                </a>
-              );
-            })}
-          </div>
-        ) : (
+              ))}
+            </div>
+          );
+        })() : (
           <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {/* Placeholder tiles. Admins can replace them by uploading real photos in /admin/gallery */}
             {[

@@ -7,14 +7,12 @@ export default function GalleryEditForm({
   id,
   caption,
   category,
-  externalLink,
   isFeatured,
   featuredOrder,
 }: {
   id: string;
   caption: string | null;
   category: string | null;
-  externalLink: string | null;
   isFeatured: boolean;
   featuredOrder: number;
 }) {
@@ -39,8 +37,7 @@ export default function GalleryEditForm({
             String(form.get("caption") ?? ""),
             String(form.get("category") ?? ""),
             form.get("is_featured") === "on",
-            Number(form.get("featured_order") ?? 0),
-            String(form.get("external_link") ?? "")
+            Number(form.get("featured_order") ?? 0)
           );
             if (result.error) setError(result.error);
             else {
@@ -52,7 +49,6 @@ export default function GalleryEditForm({
       >
         <input name="caption" defaultValue={caption ?? ""} maxLength={500} className="input-field" aria-label="Photo caption" placeholder="Caption" />
         <input name="category" defaultValue={category ?? ""} maxLength={100} className="input-field" aria-label="Photo category" placeholder="Category" />
-        <input name="external_link" defaultValue={externalLink ?? ""} type="url" className="input-field" aria-label="External link" placeholder="https://drive.google.com/..." />
         <label className="flex items-center gap-2 text-sm text-gray-700">
           <input type="checkbox" name="is_featured" defaultChecked={isFeatured} /> Feature on the landing page
         </label>

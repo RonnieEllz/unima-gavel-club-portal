@@ -35,7 +35,7 @@ export default async function AdminGalleryPage() {
             </div>
             <div className="p-2">
               {img.caption && <p className="truncate text-xs text-gray-600">{img.caption}</p>}
-              <GalleryItemActions id={img.id} caption={img.caption} category={img.category} externalLink={img.external_link} isFeatured={img.is_featured} featuredOrder={img.featured_order} />
+              <GalleryItemActions id={img.id} caption={img.caption} category={img.category} isFeatured={img.is_featured} featuredOrder={img.featured_order} />
             </div>
           </div>
         )) : <p className="text-gray-500">No photos uploaded yet.</p>}

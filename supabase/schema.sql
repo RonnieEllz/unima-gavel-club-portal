@@ -251,6 +251,7 @@
     show_stories boolean not null default true,
     show_updates boolean not null default true,
     show_gallery boolean not null default true,
+    gallery_drive_url text,
     seo_title text not null default 'UNIMA Gavel Club | University of Malawi Toastmasters',
     seo_description text not null default 'A student community at the University of Malawi focused on developing communication, public speaking, leadership and confidence.',
     social_image text,

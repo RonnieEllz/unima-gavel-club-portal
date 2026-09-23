@@ -32,6 +32,7 @@ export const defaultLandingPageSettings: Omit<LandingPageSettings, "id" | "updat
   show_stories: true,
   show_updates: true,
   show_gallery: true,
+  gallery_drive_url: null,
   seo_title: "UNIMA Gavel Club | University of Malawi Toastmasters",
   seo_description: "A student community at the University of Malawi focused on developing communication, public speaking, leadership and confidence.",
   social_image: null,

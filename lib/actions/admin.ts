@@ -686,13 +686,11 @@ export async function addGalleryImage(
   caption: string,
   category: string,
   isFeatured = false,
-  featuredOrder = 0,
-  externalLink = ""
+  featuredOrder = 0
 ) {
   const parsedUrl = z.string().url().safeParse(imageUrl);
-  const parsedExternalLink = z.string().trim().refine((value) => value === "" || /^https?:\/\//i.test(value), { message: "External link must be a valid URL." }).safeParse(externalLink);
   const parsedOrder = z.coerce.number().int().min(0).max(10000).safeParse(featuredOrder);
-  if (!parsedUrl.success || !parsedOrder.success || !parsedExternalLink.success || caption.length > 500 || category.length > 100) {
+  if (!parsedUrl.success || !parsedOrder.success || caption.length > 500 || category.length > 100) {
     return { error: "Invalid gallery details." };
   }
 
@@ -703,7 +701,6 @@ export async function addGalleryImage(
 
   const { data: image, error } = await supabase.from("gallery").insert({
     image_url: parsedUrl.data,
-    external_link: parsedExternalLink.data.trim() || null,
     caption,
     category,
     is_featured: isFeatured,
@@ -716,7 +713,7 @@ export async function addGalleryImage(
     action: "gallery_image_added",
     entityType: "gallery",
     entityId: image.id,
-    afterData: { image_url: parsedUrl.data, external_link: parsedExternalLink.data.trim() || null, caption, category, is_featured: isFeatured, featured_order: isFeatured ? parsedOrder.data : 0 },
+    afterData: { image_url: parsedUrl.data, caption, category, is_featured: isFeatured, featured_order: isFeatured ? parsedOrder.data : 0 },
   });
 
   revalidatePath("/admin/gallery");
@@ -729,15 +726,13 @@ export async function updateGalleryImage(
   caption: string,
   category: string,
   isFeatured = false,
-  featuredOrder = 0,
-  externalLink = ""
+  featuredOrder = 0
 ) {
   const parsedId = uuidSchema.safeParse(id);
   const parsedCaption = z.string().max(500).safeParse(caption);
   const parsedCategory = z.string().max(100).safeParse(category);
-  const parsedExternalLink = z.string().trim().refine((value) => value === "" || /^https?:\/\//i.test(value), { message: "External link must be a valid URL." }).safeParse(externalLink);
   const parsedOrder = z.coerce.number().int().min(0).max(10000).safeParse(featuredOrder);
-  if (!parsedId.success || !parsedCaption.success || !parsedCategory.success || !parsedExternalLink.success || !parsedOrder.success) {
+  if (!parsedId.success || !parsedCaption.success || !parsedCategory.success || !parsedOrder.success) {
     return { error: "Invalid gallery details." };
   }
 
@@ -748,7 +743,6 @@ export async function updateGalleryImage(
   const update = {
     caption: parsedCaption.data.trim() || null,
     category: parsedCategory.data.trim() || null,
-    external_link: parsedExternalLink.data.trim() || null,
     is_featured: isFeatured,
     featured_order: isFeatured ? parsedOrder.data : 0,
   };
@@ -992,7 +986,7 @@ export async function updateLandingPageSettings(formData: FormData) {
     [
       "hero_eyebrow", "hero_title", "hero_description", "hero_image",
       "intro_heading", "intro_content", "intro_image", "intro_image_alt",
-      "show_announcement", "show_intro", "show_meeting", "show_stories", "show_updates", "show_gallery",
+      "show_announcement", "show_intro", "show_meeting", "show_stories", "show_updates", "show_gallery", "gallery_drive_url",
       "seo_title", "seo_description", "social_image",
     ],
     "landing_page_content_updated"

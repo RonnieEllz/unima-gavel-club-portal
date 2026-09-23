@@ -15,7 +15,6 @@ export default function UploadForm() {
   const categoryRef = useRef<HTMLInputElement>(null);
   const featuredRef = useRef<HTMLInputElement>(null);
   const featuredOrderRef = useRef<HTMLInputElement>(null);
-  const externalLinkRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
@@ -56,8 +55,7 @@ export default function UploadForm() {
         captionRef.current?.value ?? "",
         categoryRef.current?.value ?? "",
         featuredRef.current?.checked ?? false,
-        Number(featuredOrderRef.current?.value ?? 0),
-        externalLinkRef.current?.value ?? ""
+        Number(featuredOrderRef.current?.value ?? 0)
       );
       if (result?.error) throw new Error(result.error);
 
@@ -66,7 +64,6 @@ export default function UploadForm() {
       if (categoryRef.current) categoryRef.current.value = "";
       if (featuredRef.current) featuredRef.current.checked = false;
       if (featuredOrderRef.current) featuredOrderRef.current.value = "0";
-      if (externalLinkRef.current) externalLinkRef.current.value = "";
       router.refresh();
     } catch (err: any) {
       if (uploadedPath) {
@@ -99,10 +96,6 @@ export default function UploadForm() {
       <div>
         <label className="label-field" htmlFor="gallery_featured_order">Featured order</label>
         <input ref={featuredOrderRef} id="gallery_featured_order" type="number" min="0" max="10000" defaultValue="0" className="input-field" />
-      </div>
-      <div className="sm:col-span-3">
-        <label className="label-field">External link</label>
-        <input ref={externalLinkRef} type="url" placeholder="https://drive.google.com/..." className="input-field" />
       </div>
       <div className="flex items-end">
         <button disabled={isUploading} className="btn-primary w-full">

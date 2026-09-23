@@ -9,14 +9,12 @@ export default function GalleryItemActions({
   id,
   caption,
   category,
-  externalLink,
   isFeatured,
   featuredOrder,
 }: {
   id: string;
   caption: string | null;
   category: string | null;
-  externalLink: string | null;
   isFeatured: boolean;
   featuredOrder: number;
 }) {
@@ -42,7 +40,7 @@ export default function GalleryItemActions({
       Delete
     </button>
     {error && <p className="text-xs text-red-600">{error}</p>}
-    <GalleryEditForm id={id} caption={caption} category={category} externalLink={externalLink ?? null} isFeatured={isFeatured} featuredOrder={featuredOrder} />
+    <GalleryEditForm id={id} caption={caption} category={category} isFeatured={isFeatured} featuredOrder={featuredOrder} />
     </>
   );
 }
