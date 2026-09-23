@@ -35,7 +35,7 @@ export default function GalleryLightbox({ images }: { images: GalleryImage[] }) 
             key={image.id}
             type="button"
             onClick={() => setSelectedIndex(index)}
-            className="group relative aspect-square overflow-hidden rounded-lg bg-maroon-100 text-left focus:outline-none focus:ring-2 focus:ring-maroon-500"
+            className="group relative aspect-square w-full overflow-hidden rounded-lg border-0 bg-maroon-100 p-0 text-left focus:outline-none focus:ring-2 focus:ring-maroon-500"
             aria-label={image.caption ?? "Open gallery photo"}
           >
             <Image
@@ -50,21 +50,21 @@ export default function GalleryLightbox({ images }: { images: GalleryImage[] }) 
 
       {selectedImage && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-3 sm:p-4"
           onClick={() => setSelectedIndex(null)}
         >
           <div
-            className="relative w-full max-w-5xl overflow-hidden rounded-2xl bg-white/5"
+            className="relative w-[95vw] max-w-5xl overflow-hidden rounded-2xl bg-white/5"
             onClick={(event) => event.stopPropagation()}
           >
             <button
               type="button"
               onClick={() => setSelectedIndex(null)}
-              className="absolute right-3 top-3 z-10 rounded-full bg-black/60 px-3 py-1.5 text-sm font-medium text-white hover:bg-black/80"
+              className="absolute right-2 top-2 z-10 rounded-full bg-black/60 px-3 py-1.5 text-xs font-medium text-white hover:bg-black/80 sm:right-3 sm:top-3 sm:text-sm"
             >
               Close
             </button>
-            <div className="relative h-[80vh] w-full">
+            <div className="relative h-[82vh] w-full max-h-[90vh] sm:h-[80vh]">
               <Image
                 src={selectedImage.image_url}
                 alt={selectedImage.caption ?? "Expanded Gavel Club photo"}
