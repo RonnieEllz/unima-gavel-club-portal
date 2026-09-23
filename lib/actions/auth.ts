@@ -89,5 +89,5 @@ export async function loginMember(
 export async function logout() {
   const supabase = createClient();
   await supabase.auth.signOut();
-  redirect("/login");
+  redirect("/");
 }

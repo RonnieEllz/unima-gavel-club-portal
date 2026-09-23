@@ -59,7 +59,7 @@ export default function PublicNavbarClient() {
     setIsLoggedIn(false);
     setIsAdmin(false);
     setMenuOpen(false);
-    router.push("/login");
+    router.push("/");
     router.refresh();
   }
 
