@@ -13,7 +13,7 @@ type Badge = {
 
 type MemberSex = "male" | "female";
 
-function BadgeFigure({ variant, earned, expression, sex, attendedCount, badgeName }: Pick<Badge, "variant" | "earned" | "expression" | "name"> & { sex: MemberSex; attendedCount: number }) {
+function BadgeFigure({ variant, earned, expression, sex, attendedCount, badgeName }: Pick<Badge, "variant" | "earned" | "expression"> & { sex: MemberSex; attendedCount: number; badgeName: string }) {
   const [isDancing, setIsDancing] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
 
