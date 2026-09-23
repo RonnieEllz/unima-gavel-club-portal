@@ -54,7 +54,7 @@ export default function GalleryLightbox({ images }: { images: GalleryImage[] }) 
           onClick={() => setSelectedIndex(null)}
         >
           <div
-            className="relative w-[95vw] max-w-5xl overflow-hidden rounded-2xl bg-white/5"
+            className="relative aspect-square w-[95vw] max-w-[min(80vw,80vh)] overflow-hidden rounded-2xl bg-white/5"
             onClick={(event) => event.stopPropagation()}
           >
             <button
@@ -64,12 +64,12 @@ export default function GalleryLightbox({ images }: { images: GalleryImage[] }) 
             >
               Close
             </button>
-            <div className="relative h-[82vh] w-full max-h-[90vh] sm:h-[80vh]">
+            <div className="relative h-full w-full">
               <Image
                 src={selectedImage.image_url}
                 alt={selectedImage.caption ?? "Expanded Gavel Club photo"}
                 fill
-                className="object-contain"
+                className="object-contain p-2 sm:p-3"
               />
             </div>
           </div>

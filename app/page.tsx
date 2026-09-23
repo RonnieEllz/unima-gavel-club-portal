@@ -153,7 +153,7 @@ export default async function LandingPage() {
                   href={driveUrl}
                   target="_blank"
                   rel="noreferrer noopener"
-                  className="group relative block overflow-hidden rounded-lg border border-dashed border-maroon-300 bg-maroon-50 focus:outline-none focus:ring-2 focus:ring-maroon-500"
+                  className="group relative block aspect-square overflow-hidden rounded-lg border border-dashed border-maroon-300 bg-maroon-50 focus:outline-none focus:ring-2 focus:ring-maroon-500"
                   aria-label="View more club photos"
                 >
                   <div className="relative aspect-square overflow-hidden rounded-lg bg-maroon-100">
