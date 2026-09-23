@@ -92,6 +92,7 @@ export default async function AdminSettingsPage() {
               {String(label)}
             </label>
           ))}
+          <input name="gallery_drive_url" type="url" defaultValue={values.gallery_drive_url ?? ""} placeholder="Google Drive photo album URL (optional)" className="input-field" />
         </fieldset>
 
         <fieldset className="grid gap-4">
