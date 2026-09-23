@@ -154,7 +154,7 @@ export default function BulkMemberStatusForm({ members }: { members: MemberWithO
                   <p><b>Holiday residence:</b> {member.holiday_residence || "-"}</p>
                   <p><b>Learning goals:</b> {member.learning_expectations || "-"}</p>
                   <p><b>Preferred placement:</b> {member.preferred_placement || "-"}</p>
-                  <AchievementBadges attendedCount={member.operationalSummary.attendedCount} completedMeetingCount={member.completedMeetingCount} />
+                  <AchievementBadges attendedCount={member.operationalSummary.attendedCount} completedMeetingCount={member.completedMeetingCount} sex={member.sex} />
                   <MemberDetailsForm member={member} />
                 </div>
               </details>
@@ -241,6 +241,7 @@ export default function BulkMemberStatusForm({ members }: { members: MemberWithO
                       <AchievementBadges
                         attendedCount={member.operationalSummary.attendedCount}
                         completedMeetingCount={member.completedMeetingCount}
+                        sex={member.sex}
                       />
                       <MemberDetailsForm member={member} />
                     </div>

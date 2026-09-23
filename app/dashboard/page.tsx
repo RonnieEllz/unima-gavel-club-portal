@@ -81,7 +81,7 @@ export default async function DashboardPage() {
           </div>
         </div>
         <div>
-          <AchievementBadges attendedCount={operationalSummary?.attendedCount ?? presentCount} completedMeetingCount={completedSemesterMeetingCount} />
+          <AchievementBadges attendedCount={operationalSummary?.attendedCount ?? presentCount} completedMeetingCount={completedSemesterMeetingCount} sex={profile?.sex ?? "male"} />
         </div>
       </section>
 

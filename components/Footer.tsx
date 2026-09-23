@@ -36,6 +36,10 @@ function TikTokIcon() {
 export default function Footer() {
   const [settings, setSettings] = useState<FooterSettings>(defaultFooter);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [logoClicks, setLogoClicks] = useState(0);
+  const [showEasterEgg, setShowEasterEgg] = useState(false);
+  const [universityClicks, setUniversityClicks] = useState(0);
+  const [showUniversityEasterEgg, setShowUniversityEasterEgg] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -65,14 +69,41 @@ export default function Footer() {
     };
   }, []);
 
+  function handleLogoClick() {
+    setLogoClicks((clicks) => {
+      const nextClicks = clicks + 1;
+      if (nextClicks >= 12) {
+        setShowEasterEgg(true);
+        return 0;
+      }
+      return nextClicks;
+    });
+  }
+
+  function handleUniversityClick() {
+    setUniversityClicks((clicks) => {
+      const nextClicks = clicks + 1;
+      if (nextClicks >= 5) {
+        setShowUniversityEasterEgg(true);
+        return 0;
+      }
+      return nextClicks;
+    });
+  }
+
   return (
     <footer className="border-t border-gray-200 bg-ink-900 text-gray-300">
       <div className="container-page grid gap-8 py-12 md:grid-cols-3">
         <div>
           <div className="flex items-center gap-3">
-            <span className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-black">
-              <Image src="/logo.jpg" alt="UNIMA Gavel Club logo" width={48} height={48} className="h-full w-full scale-[1.14] object-cover object-center" />
-            </span>
+            <button
+              type="button"
+              onClick={handleLogoClick}
+              className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-black focus:outline-none focus:ring-2 focus:ring-gold-400 focus:ring-offset-2 focus:ring-offset-ink-900"
+              aria-label="UNIMA Gavel Club logo"
+            >
+              <Image src="/logo.jpg" alt="" width={48} height={48} className="h-full w-full scale-[1.14] object-cover object-center" />
+            </button>
             <p className="font-display text-lg font-bold text-white">UNIMA Gavel Club</p>
           </div>
           <p className="mt-2 text-sm text-gray-400">
@@ -90,7 +121,9 @@ export default function Footer() {
         </div>
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-gold-400">Contact</p>
-          <p className="mt-3 text-sm">{settings.footer_address}</p>
+          <p className="mt-3 text-sm" onClick={handleUniversityClick}>
+            {settings.footer_address}
+          </p>
           <a href={`mailto:${settings.footer_email}`} className="text-sm hover:text-white">{settings.footer_email}</a>
           {settings.footer_phone_1 && <a href={`tel:${settings.footer_phone_1}`} className="block text-sm hover:text-white">{settings.footer_phone_1}</a>}
           {settings.footer_phone_2 && <a href={`tel:${settings.footer_phone_2}`} className="block text-sm hover:text-white">{settings.footer_phone_2}</a>}
@@ -113,6 +146,47 @@ export default function Footer() {
       <div className="border-t border-white/10 py-4 text-center text-xs text-gray-500">
         © {new Date().getFullYear()} {settings.footer_copyright}
       </div>
+      {showEasterEgg && (
+        <div className="footer-easter-egg" role="dialog" aria-modal="true" aria-labelledby="footer-easter-egg-title">
+          <div className="footer-easter-egg-confetti" aria-hidden="true">✦ ✧ ★ ✦ ✧</div>
+          <div className="footer-easter-egg-content">
+            <button
+              type="button"
+              onClick={() => setShowEasterEgg(false)}
+              className="footer-easter-egg-close"
+              aria-label="Close celebration"
+            >
+              ×
+            </button>
+            <Image src="/logo.jpg" alt="" width={96} height={96} className="mx-auto h-24 w-24 rounded-full object-cover" />
+            <p id="footer-easter-egg-title" className="mt-6 font-display text-3xl font-bold text-gold-300 sm:text-5xl">
+              UNIMA Toastmasters,
+            </p>
+            <p className="mt-2 text-2xl font-extrabold uppercase tracking-wide text-white sm:text-4xl">
+              where LEADERS ARE MADE!!!
+            </p>
+          </div>
+        </div>
+      )}
+      {showUniversityEasterEgg && (
+        <div className="footer-easter-egg" role="dialog" aria-modal="true" aria-labelledby="university-easter-egg-title">
+          <div className="footer-easter-egg-confetti" aria-hidden="true">✦ ✧ ★ ✦ ✧</div>
+          <div className="footer-easter-egg-content">
+            <button
+              type="button"
+              onClick={() => setShowUniversityEasterEgg(false)}
+              className="footer-easter-egg-close"
+              aria-label="Close celebration"
+            >
+              ×
+            </button>
+            <Image src="/logo.jpg" alt="" width={96} height={96} className="mx-auto h-24 w-24 rounded-full object-cover" />
+            <p id="university-easter-egg-title" className="mt-6 font-display text-3xl font-bold uppercase text-gold-300 sm:text-5xl">
+              UNIVERSITY THAT GOD LOVED THE MOST
+            </p>
+          </div>
+        </div>
+      )}
     </footer>
   );
 }

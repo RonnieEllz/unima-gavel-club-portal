@@ -1,6 +1,6 @@
-import Image from "next/image";
 import PublicNavbar from "@/components/PublicNavbarClient";
 import Footer from "@/components/Footer";
+import AboutEasterEggImage from "@/components/AboutEasterEggImage";
 import { defaultLandingPageSettings, getLandingPageSettings } from "@/lib/data";
 
 export default async function AboutPage() {
@@ -15,11 +15,9 @@ export default async function AboutPage() {
             {settings.about_content.split("\n\n").filter(Boolean).map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
           </div>
           <div className="relative h-72 overflow-hidden rounded-xl shadow-md">
-            <Image
+            <AboutEasterEggImage
               src={settings.about_image || "https://images.unsplash.com/photo-1560439514-07dfa4b3d3e2?w=1000&q=80"}
               alt={settings.about_image_alt}
-              fill
-              className="object-cover"
             />
           </div>
         </div>

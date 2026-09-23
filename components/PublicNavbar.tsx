@@ -1,7 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
 import { logout } from "@/lib/actions/auth";
 import { getCurrentUserProfile } from "@/lib/data";
+import EasterEggLogo from "@/components/EasterEggLogo";
 
 const links = [
   { href: "/", label: "Feed" },
@@ -16,12 +16,14 @@ export default async function PublicNavbar() {
   return (
     <header className="sticky top-0 z-40 border-b border-maroon-900/10 bg-white/90 backdrop-blur">
       <nav className="container-page flex h-16 items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 font-display text-lg font-bold text-maroon-800">
-          <span className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-black">
-            <Image src="/logo.jpg" alt="UNIMA Gavel Club logo" width={40} height={40} className="h-full w-full scale-[1.14] object-cover object-center" priority />
-          </span>
-          UNIMA Gavel Club
-        </Link>
+        <div className="flex items-center gap-2 font-display text-lg font-bold text-maroon-800">
+          <EasterEggLogo
+            size={40}
+            priority
+            className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-black focus:outline-none focus:ring-2 focus:ring-gold-400 focus:ring-offset-2"
+          />
+          <Link href="/">UNIMA Gavel Club</Link>
+        </div>
 
         <div className="hidden items-center gap-6 md:flex">
           {links.map((l) => (

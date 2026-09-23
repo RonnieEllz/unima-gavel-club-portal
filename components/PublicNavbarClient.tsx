@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import EasterEggLogo from "@/components/EasterEggLogo";
 
 const links = [
   { href: "/", label: "Feed" },
@@ -66,12 +66,14 @@ export default function PublicNavbarClient() {
   return (
     <header className="sticky top-0 z-40 border-b border-maroon-900/10 bg-white/90 backdrop-blur">
       <nav className="container-page relative flex h-16 items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 font-display text-lg font-bold text-maroon-800">
-          <span className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-black">
-            <Image src="/logo.jpg" alt="UNIMA Gavel Club logo" width={40} height={40} className="h-full w-full scale-[1.14] object-cover object-center" priority />
-          </span>
-          UNIMA Gavel Club
-        </Link>
+        <div className="flex items-center gap-2 font-display text-lg font-bold text-maroon-800">
+          <EasterEggLogo
+            size={40}
+            priority
+            className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-black focus:outline-none focus:ring-2 focus:ring-gold-400 focus:ring-offset-2"
+          />
+          <Link href="/">UNIMA Gavel Club</Link>
+        </div>
         <div className={`${menuOpen ? "flex" : "hidden"} absolute left-0 right-0 top-16 flex-col gap-4 border-b border-maroon-900/10 bg-white p-4 shadow-md md:static md:flex md:flex-row md:border-0 md:bg-transparent md:p-0 md:shadow-none`}>
           {links.map((link) => (
             <Link key={link.href} href={link.href} onClick={() => setMenuOpen(false)} className="text-sm font-medium text-gray-700 hover:text-maroon-700">
