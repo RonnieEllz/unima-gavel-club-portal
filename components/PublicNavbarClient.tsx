@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 const links = [
-  { href: "/", label: "Home" },
+  { href: "/", label: "Feed" },
   { href: "/about", label: "About" },
   { href: "/stories", label: "Stories" },
   { href: "/updates", label: "Updates" },
