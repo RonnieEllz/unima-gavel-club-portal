@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import StoryCard from "@/components/StoryCard";
 import UpdateCard from "@/components/UpdateCard";
 import MeetingCard from "@/components/MeetingCard";
+import GalleryLightbox from "@/components/GalleryLightbox";
 import { getUpcomingMeeting, getLatestPosts, getGalleryPreview, getSiteAnnouncement, getLandingPageSettings, getCurrentUserProfile } from "@/lib/data";
 
 export default async function LandingPage() {
@@ -162,17 +163,13 @@ export default async function LandingPage() {
                       <span className="inline-flex rounded-full bg-white/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-maroon-800">
                         View more
                       </span>
-                      <p className="mt-2 text-sm font-semibold text-white">Club photo archive</p>
+                      <p className="mt-2 text-sm font-semibold text-white">Club photo collection</p>
                     </div>
                   </div>
                 </a>
               )}
 
-              {galleryCards.filter((g, index) => !(driveUrl && index === 0)).map((g) => (
-                <div key={g.id} className="relative aspect-square overflow-hidden rounded-lg bg-maroon-100">
-                  <Image src={g.image_url} alt={g.caption ?? "Gavel Club photo"} fill className="object-cover" />
-                </div>
-              ))}
+              <GalleryLightbox images={galleryCards.filter((g, index) => !(driveUrl && index === 0))} />
             </div>
           );
         })() : (
