@@ -200,6 +200,7 @@
   create table if not exists gallery (
     id uuid primary key default uuid_generate_v4(),
     image_url text not null,
+    external_link text,
     caption text,
     category text,
     is_featured boolean not null default false,

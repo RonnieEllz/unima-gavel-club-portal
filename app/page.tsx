@@ -143,11 +143,26 @@ export default async function LandingPage() {
         <p className="mt-2 text-gray-600">Moments from our meetings, trainings and events.</p>
         {gallery.length > 0 ? (
           <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {gallery.map((g) => (
-              <div key={g.id} className="relative aspect-square overflow-hidden rounded-lg bg-maroon-100">
-                <Image src={g.image_url} alt={g.caption ?? "Gavel Club photo"} fill className="object-cover" />
-              </div>
-            ))}
+            {gallery.map((g) => {
+              const card = (
+                <div key={g.id} className="relative aspect-square overflow-hidden rounded-lg bg-maroon-100">
+                  <Image src={g.image_url} alt={g.caption ?? "Gavel Club photo"} fill className="object-cover" />
+                  {g.external_link && (
+                    <span className="absolute bottom-2 right-2 rounded-full bg-black/70 px-2 py-1 text-[10px] font-semibold tracking-wide text-white">
+                      View more
+                    </span>
+                  )}
+                </div>
+              );
+
+              if (!g.external_link) return card;
+
+              return (
+                <a key={g.id} href={g.external_link} target="_blank" rel="noreferrer noopener" className="group relative block overflow-hidden rounded-lg focus:outline-none focus:ring-2 focus:ring-maroon-500">
+                  {card}
+                </a>
+              );
+            })}
           </div>
         ) : (
           <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">

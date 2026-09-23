@@ -86,6 +86,7 @@ export interface Post {
 export interface GalleryImage {
   id: string;
   image_url: string;
+  external_link: string | null;
   caption: string | null;
   category: string | null;
   is_featured: boolean;
