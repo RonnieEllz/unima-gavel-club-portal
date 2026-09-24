@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import type { Meeting, Post, GalleryImage, Semester, LandingPageSettings } from "@/types/database";
+import type { Meeting, Post, GalleryImage, Semester, LandingPageSettings, CustomSection } from "@/types/database";
 
 export const defaultLandingPageSettings: Omit<LandingPageSettings, "id" | "updated_by" | "updated_at"> = {
   hero_eyebrow: "University of Malawi",
@@ -42,6 +42,17 @@ export async function getLandingPageSettings(): Promise<typeof defaultLandingPag
   const supabase = createClient();
   const { data } = await supabase.from("landing_page_settings").select("*").eq("id", true).maybeSingle();
   return { ...defaultLandingPageSettings, ...(data ?? {}) };
+}
+
+export async function getCustomSections(): Promise<CustomSection[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("custom_sections")
+    .select("*")
+    .eq("is_visible", true)
+    .order("display_order", { ascending: true })
+    .order("created_at", { ascending: true });
+  return (data as CustomSection[]) ?? [];
 }
 
 export async function getActiveSemester(): Promise<Semester | null> {

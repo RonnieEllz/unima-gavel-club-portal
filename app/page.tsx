@@ -5,10 +5,10 @@ import Footer from "@/components/Footer";
 import StoryCard from "@/components/StoryCard";
 import UpdateCard from "@/components/UpdateCard";
 import MeetingCard from "@/components/MeetingCard";
-import { getUpcomingMeeting, getLatestPosts, getGalleryPreview, getSiteAnnouncement, getLandingPageSettings, getCurrentUserProfile } from "@/lib/data";
+import { getUpcomingMeeting, getLatestPosts, getGalleryPreview, getSiteAnnouncement, getLandingPageSettings, getCustomSections, getCurrentUserProfile } from "@/lib/data";
 
 export default async function LandingPage() {
-  const [{ user }, meeting, stories, updates, gallery, announcement, settings] = await Promise.all([
+  const [{ user }, meeting, stories, updates, gallery, announcement, settings, customSections] = await Promise.all([
     getCurrentUserProfile(),
     getUpcomingMeeting(),
     getLatestPosts("story", 3),
@@ -16,6 +16,7 @@ export default async function LandingPage() {
     getGalleryPreview(8),
     getSiteAnnouncement(),
     getLandingPageSettings(),
+    getCustomSections(),
   ]);
 
   return (
@@ -82,6 +83,24 @@ export default async function LandingPage() {
           </div>
         </div>
       </section>}
+
+      {customSections.map((section, index) => (
+        <section key={section.id} className={index % 2 === 0 ? "container-page py-16" : "bg-maroon-50 py-16"}>
+          <div className={`container-page grid gap-10 md:grid-cols-2 md:items-center ${index % 2 === 1 ? "md:[&>div:first-child]:order-2" : ""}`}>
+            <div>
+              <h2 className="font-display text-3xl font-bold text-maroon-800">{section.title}</h2>
+              {section.content.split("\n\n").map((paragraph) => (
+                <p key={paragraph} className="mt-4 text-gray-600">{paragraph}</p>
+              ))}
+            </div>
+            {section.image_url && (
+              <div className="relative h-72 overflow-hidden rounded-xl shadow-md">
+                <Image src={section.image_url} alt={section.image_alt || section.title} fill className="object-cover" />
+              </div>
+            )}
+          </div>
+        </section>
+      ))}
 
       {/* UPCOMING MEETING */}
       {settings.show_meeting && <section className="bg-maroon-50 py-16">

@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { updateAboutPageSettings, updateFooterSettings, updateLandingPageSettings, updateSiteAnnouncement, updateWhatsAppGroupLink } from "@/lib/actions/admin";
+import { createCustomSection, deleteCustomSection, updateAboutPageSettings, updateCustomSection, updateFooterSettings, updateLandingPageSettings, updateSiteAnnouncement, updateWhatsAppGroupLink } from "@/lib/actions/admin";
 import { normalizeAnnouncementInput } from "@/lib/announcement";
 import { defaultLandingPageSettings } from "@/lib/data";
 import ImageUploadField from "@/components/admin/ImageUploadField";
@@ -7,7 +7,7 @@ import SettingsForm from "@/components/admin/SettingsForm";
 
 export default async function AdminSettingsPage() {
   const supabase = createClient();
-  const [{ data: setting }, { data: announcementSetting }, { data: whatsappSetting }] = await Promise.all([
+  const [{ data: setting }, { data: announcementSetting }, { data: whatsappSetting }, { data: customSections }] = await Promise.all([
     supabase
       .from("landing_page_settings")
       .select("*")
@@ -23,6 +23,11 @@ export default async function AdminSettingsPage() {
       .select("value")
       .eq("key", "whatsapp_group_link")
       .maybeSingle(),
+    supabase
+      .from("custom_sections")
+      .select("*")
+      .order("display_order", { ascending: true })
+      .order("created_at", { ascending: true }),
   ]);
   const values = { ...defaultLandingPageSettings, ...(setting ?? {}) };
 
@@ -51,6 +56,11 @@ export default async function AdminSettingsPage() {
   const submitWhatsAppLink = async (formData: FormData) => {
     "use server";
     return updateWhatsAppGroupLink(formData);
+  };
+
+  const submitCreateCustomSection = async (formData: FormData) => {
+    "use server";
+    return createCustomSection(formData);
   };
 
   return (
@@ -102,6 +112,45 @@ export default async function AdminSettingsPage() {
           <ImageUploadField name="social_image" label="Social sharing image" currentUrl={values.social_image ?? ""} />
         </fieldset>
 
+      </SettingsForm>
+
+      <section className="card mt-6 p-6">
+        <h2 className="font-display text-xl font-bold text-maroon-800">Custom sections</h2>
+        <p className="mt-1 text-sm text-gray-600">Add extra content sections to the public landing page.</p>
+        <div className="mt-6 grid gap-6">
+          {(customSections ?? []).map((section) => {
+            const submitUpdate = async (formData: FormData) => {
+              "use server";
+              return updateCustomSection(section.id, formData);
+            };
+            const submitDelete = async () => {
+              "use server";
+              return deleteCustomSection(section.id);
+            };
+            return (
+              <div key={section.id} className="border-t border-gray-200 pt-6">
+                <SettingsForm action={submitUpdate} deleteAction={submitDelete} deleteLabel="Delete section" buttonLabel="Save section">
+                  <input name="title" defaultValue={section.title} placeholder="Section title" className="input-field" required />
+                  <textarea name="content" defaultValue={section.content} placeholder="Section content. Separate paragraphs with a blank line." className="input-field" rows={6} required />
+                  <input name="image_url" type="url" defaultValue={section.image_url ?? ""} placeholder="Image URL (optional)" className="input-field" />
+                  <input name="image_alt" defaultValue={section.image_alt} placeholder="Image description (optional)" className="input-field" />
+                  <input name="display_order" type="number" min="0" defaultValue={section.display_order} placeholder="Display order" className="input-field" required />
+                  <label className="flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" name="is_visible" defaultChecked={section.is_visible} /> Show on landing page</label>
+                </SettingsForm>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <SettingsForm action={submitCreateCustomSection} buttonLabel="Add custom section">
+        <h2 className="font-display text-xl font-bold text-maroon-800">Add custom section</h2>
+        <input name="title" placeholder="Section title" className="input-field" required />
+        <textarea name="content" placeholder="Section content. Separate paragraphs with a blank line." className="input-field" rows={6} required />
+        <input name="image_url" type="url" placeholder="Image URL (optional)" className="input-field" />
+        <input name="image_alt" placeholder="Image description (optional)" className="input-field" />
+        <input name="display_order" type="number" min="0" defaultValue="0" placeholder="Display order" className="input-field" required />
+        <label className="flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" name="is_visible" defaultChecked /> Show on landing page</label>
       </SettingsForm>
 
       <SettingsForm action={submitAboutSettings} buttonLabel="Save About page">

@@ -10,6 +10,7 @@ import { recordAuditEvent } from "@/lib/actions/audit";
 import {
   adminRoleSchema,
   aboutPageSettingsSchema,
+  customSectionSchema,
   footerSettingsSchema,
   landingPageContentSchema,
   meetingSchema,
@@ -1009,6 +1010,84 @@ export async function updateFooterSettings(formData: FormData) {
     ["footer_description", "footer_address", "footer_email", "footer_phone_1", "footer_phone_2", "footer_instagram_url", "footer_tiktok_url", "footer_copyright"],
     "footer_settings_updated"
   );
+}
+
+export async function createCustomSection(formData: FormData) {
+  const parsed = customSectionSchema.safeParse({
+    title: String(formData.get("title") ?? ""),
+    content: String(formData.get("content") ?? ""),
+    image_url: String(formData.get("image_url") ?? ""),
+    image_alt: String(formData.get("image_alt") ?? ""),
+    display_order: String(formData.get("display_order") ?? "0"),
+    is_visible: formData.get("is_visible") === "on",
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid custom section." };
+
+  const supabase = createClient();
+  const auth = await getAuthContext();
+  if (!auth || (auth.role !== "super_admin" && auth.role !== "administrator")) {
+    return { error: "Only an Administrator can manage custom sections." };
+  }
+
+  const { data: section, error } = await supabase
+    .from("custom_sections")
+    .insert({ ...parsed.data, created_by: auth.userId })
+    .select("id")
+    .single();
+  if (error) return { error: error.message };
+
+  await recordAuditEvent({ action: "custom_section_created", entityType: "custom_section", entityId: section.id, afterData: parsed.data });
+  revalidatePath("/");
+  revalidatePath("/admin/settings");
+  return { success: true };
+}
+
+export async function updateCustomSection(sectionId: string, formData: FormData) {
+  const parsedId = uuidSchema.safeParse(sectionId);
+  if (!parsedId.success) return { error: "Invalid custom section." };
+  const parsed = customSectionSchema.safeParse({
+    title: String(formData.get("title") ?? ""),
+    content: String(formData.get("content") ?? ""),
+    image_url: String(formData.get("image_url") ?? ""),
+    image_alt: String(formData.get("image_alt") ?? ""),
+    display_order: String(formData.get("display_order") ?? "0"),
+    is_visible: formData.get("is_visible") === "on",
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid custom section." };
+
+  const supabase = createClient();
+  const auth = await getAuthContext();
+  if (!auth || (auth.role !== "super_admin" && auth.role !== "administrator")) {
+    return { error: "Only an Administrator can manage custom sections." };
+  }
+
+  const { data: previous } = await supabase.from("custom_sections").select("*").eq("id", parsedId.data).maybeSingle();
+  const { error } = await supabase.from("custom_sections").update(parsed.data).eq("id", parsedId.data);
+  if (error) return { error: error.message };
+
+  await recordAuditEvent({ action: "custom_section_updated", entityType: "custom_section", entityId: parsedId.data, beforeData: previous, afterData: parsed.data });
+  revalidatePath("/");
+  revalidatePath("/admin/settings");
+  return { success: true };
+}
+
+export async function deleteCustomSection(sectionId: string) {
+  const parsedId = uuidSchema.safeParse(sectionId);
+  if (!parsedId.success) return { error: "Invalid custom section." };
+  const supabase = createClient();
+  const auth = await getAuthContext();
+  if (!auth || (auth.role !== "super_admin" && auth.role !== "administrator")) {
+    return { error: "Only an Administrator can manage custom sections." };
+  }
+
+  const { data: previous } = await supabase.from("custom_sections").select("*").eq("id", parsedId.data).maybeSingle();
+  const { error } = await supabase.from("custom_sections").delete().eq("id", parsedId.data);
+  if (error) return { error: error.message };
+
+  await recordAuditEvent({ action: "custom_section_deleted", entityType: "custom_section", entityId: parsedId.data, beforeData: previous });
+  revalidatePath("/");
+  revalidatePath("/admin/settings");
+  return { success: true };
 }
 
 export async function removeAdministrator(userId: string, password: string) {

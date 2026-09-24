@@ -113,6 +113,15 @@ export const footerSettingsSchema = landingPageSettingsSchema.pick({
   footer_copyright: true,
 });
 
+export const customSectionSchema = z.object({
+  title: z.string().trim().min(2).max(160),
+  content: z.string().trim().min(2).max(10000),
+  image_url: optionalImageSchema,
+  image_alt: z.string().trim().max(200),
+  display_order: z.coerce.number().int().min(0).max(10000),
+  is_visible: z.boolean(),
+});
+
 export const memberDetailsSchema = z.object({
   full_name: z.string().trim().min(2).max(160),
   program: z.string().trim().min(2).max(160),

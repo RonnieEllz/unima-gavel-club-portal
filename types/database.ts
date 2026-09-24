@@ -141,6 +141,19 @@ export interface LandingPageSettings {
   updated_at: string;
 }
 
+export interface CustomSection {
+  id: string;
+  title: string;
+  content: string;
+  image_url: string | null;
+  image_alt: string;
+  display_order: number;
+  is_visible: boolean;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface AdminRoleRow {
   id: string;
   user_id: string;
@@ -184,6 +197,7 @@ export interface Database {
       gallery: { Row: GalleryImage; Insert: Partial<GalleryImage>; Update: Partial<GalleryImage>; Relationships: [] };
       site_settings: { Row: SiteSetting; Insert: Partial<SiteSetting>; Update: Partial<SiteSetting>; Relationships: [] };
       landing_page_settings: { Row: LandingPageSettings; Insert: Partial<LandingPageSettings>; Update: Partial<LandingPageSettings>; Relationships: [] };
+      custom_sections: { Row: CustomSection; Insert: Partial<CustomSection>; Update: Partial<CustomSection>; Relationships: [] };
       admin_roles: { Row: AdminRoleRow; Insert: Partial<AdminRoleRow>; Update: Partial<AdminRoleRow>; Relationships: [] };
     };
     Views: Record<string, never>;
