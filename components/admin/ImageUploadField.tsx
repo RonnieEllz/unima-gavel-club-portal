@@ -10,10 +10,12 @@ export default function ImageUploadField({
   name,
   label,
   currentUrl,
+  showUrlInput = false,
 }: {
   name: string;
   label: string;
   currentUrl: string;
+  showUrlInput?: boolean;
 }) {
   const [imageUrl, setImageUrl] = useState(currentUrl);
   const [isUploading, setIsUploading] = useState(false);
@@ -51,6 +53,15 @@ export default function ImageUploadField({
     <div className="grid gap-2">
       <label className="label-field" htmlFor={`${name}_file`}>{label}</label>
       <input type="hidden" name={name} value={imageUrl} />
+      {showUrlInput && (
+        <input
+          type="url"
+          value={imageUrl}
+          onChange={(event) => setImageUrl(event.target.value)}
+          placeholder="Paste a secure image URL or upload a photo below"
+          className="input-field"
+        />
+      )}
       <input
         id={`${name}_file`}
         type="file"

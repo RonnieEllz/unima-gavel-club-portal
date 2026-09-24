@@ -132,7 +132,7 @@ export default async function AdminSettingsPage() {
                 <SettingsForm action={submitUpdate} deleteAction={submitDelete} deleteLabel="Delete section" buttonLabel="Save section">
                   <input name="title" defaultValue={section.title} placeholder="Section title" className="input-field" required />
                   <textarea name="content" defaultValue={section.content} placeholder="Section content. Separate paragraphs with a blank line." className="input-field" rows={6} required />
-                  <input name="image_url" type="url" defaultValue={section.image_url ?? ""} placeholder="Image URL (optional)" className="input-field" />
+                  <ImageUploadField name="image_url" label="Section image (optional)" currentUrl={section.image_url ?? ""} showUrlInput />
                   <input name="image_alt" defaultValue={section.image_alt} placeholder="Image description (optional)" className="input-field" />
                   <input name="display_order" type="number" min="0" defaultValue={section.display_order} placeholder="Display order" className="input-field" required />
                   <label className="flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" name="is_visible" defaultChecked={section.is_visible} /> Show on landing page</label>
@@ -147,7 +147,7 @@ export default async function AdminSettingsPage() {
         <h2 className="font-display text-xl font-bold text-maroon-800">Add custom section</h2>
         <input name="title" placeholder="Section title" className="input-field" required />
         <textarea name="content" placeholder="Section content. Separate paragraphs with a blank line." className="input-field" rows={6} required />
-        <input name="image_url" type="url" placeholder="Image URL (optional)" className="input-field" />
+        <ImageUploadField name="image_url" label="Section image (optional)" currentUrl="" showUrlInput />
         <input name="image_alt" placeholder="Image description (optional)" className="input-field" />
         <input name="display_order" type="number" min="0" defaultValue="0" placeholder="Display order" className="input-field" required />
         <label className="flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" name="is_visible" defaultChecked /> Show on landing page</label>
