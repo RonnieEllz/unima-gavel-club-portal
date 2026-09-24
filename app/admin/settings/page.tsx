@@ -50,7 +50,7 @@ export default async function AdminSettingsPage() {
     "use server";
     const normalized = normalizeAnnouncementInput(String(formData.get("announcement") ?? ""));
     if (!normalized.valid) return { error: "Announcement must be 1-500 characters long." };
-    return updateSiteAnnouncement(normalized.text);
+    return updateSiteAnnouncement(normalized.text, String(formData.get("settings_password") ?? ""));
   };
 
   const submitWhatsAppLink = async (formData: FormData) => {
@@ -123,9 +123,9 @@ export default async function AdminSettingsPage() {
               "use server";
               return updateCustomSection(section.id, formData);
             };
-            const submitDelete = async () => {
+            const submitDelete = async (password: string) => {
               "use server";
-              return deleteCustomSection(section.id);
+              return deleteCustomSection(section.id, password);
             };
             return (
               <div key={section.id} className="border-t border-gray-200 pt-6">

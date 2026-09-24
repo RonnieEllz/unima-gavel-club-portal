@@ -802,6 +802,19 @@ async function confirmCurrentPassword(
   return !error && reauthenticated.user?.id === auth.userId;
 }
 
+async function requireSettingsPassword(
+  supabase: ReturnType<typeof createClient>,
+  auth: { userId: string },
+  password: string
+) {
+  const parsedPassword = z.string().min(8, "Enter your current password to confirm this settings change.").safeParse(password);
+  if (!parsedPassword.success) return { error: parsedPassword.error.issues[0]?.message ?? "Enter your current password." };
+  if (!(await confirmCurrentPassword(supabase, auth, parsedPassword.data))) {
+    return { error: "Password confirmation failed. No settings were changed." };
+  }
+  return null;
+}
+
 // Admins are granted a role by selecting an existing member (an approved
 // profile) from a dropdown in the Administrators page. This avoids needing
 // a separate email-lookup RPC that would require the service role key.
@@ -853,7 +866,7 @@ export async function addAdministratorById(userId: string, role: AdminRoleName, 
   return { success: true };
 }
 
-export async function updateSiteAnnouncement(message: string) {
+export async function updateSiteAnnouncement(message: string, password: string) {
   const trimmed = message.trim();
   if (trimmed.length === 0 || trimmed.length > 500) {
     return { error: "Announcement must be 1-500 characters long." };
@@ -864,6 +877,8 @@ export async function updateSiteAnnouncement(message: string) {
   if (!auth || (auth.role !== "super_admin" && auth.role !== "administrator")) {
     return { error: "Only an Administrator can update landing page settings." };
   }
+  const passwordError = await requireSettingsPassword(supabase, auth, password);
+  if (passwordError) return passwordError;
 
   const { data: previous } = await supabase
     .from("site_settings")
@@ -912,6 +927,8 @@ export async function updateWhatsAppGroupLink(formData: FormData) {
   if (!auth || !canManageOperations(auth.role as AdminRoleName)) {
     return { error: "Only operations administrators can update the WhatsApp group link." };
   }
+  const passwordError = await requireSettingsPassword(supabase, auth, String(formData.get("settings_password") ?? ""));
+  if (passwordError) return passwordError;
 
   const { data: previous } = await supabase
     .from("site_settings")
@@ -956,6 +973,8 @@ async function updateLandingSettingsSection(
   if (!auth || (auth.role !== "super_admin" && auth.role !== "administrator")) {
     return { error: "Only an Administrator can update landing page settings." };
   }
+  const passwordError = await requireSettingsPassword(supabase, auth, String(formData.get("settings_password") ?? ""));
+  if (passwordError) return passwordError;
 
   const { data: previous } = await supabase
     .from("landing_page_settings")
@@ -1028,6 +1047,8 @@ export async function createCustomSection(formData: FormData) {
   if (!auth || (auth.role !== "super_admin" && auth.role !== "administrator")) {
     return { error: "Only an Administrator can manage custom sections." };
   }
+  const passwordError = await requireSettingsPassword(supabase, auth, String(formData.get("settings_password") ?? ""));
+  if (passwordError) return passwordError;
 
   const { data: section, error } = await supabase
     .from("custom_sections")
@@ -1060,6 +1081,8 @@ export async function updateCustomSection(sectionId: string, formData: FormData)
   if (!auth || (auth.role !== "super_admin" && auth.role !== "administrator")) {
     return { error: "Only an Administrator can manage custom sections." };
   }
+  const passwordError = await requireSettingsPassword(supabase, auth, String(formData.get("settings_password") ?? ""));
+  if (passwordError) return passwordError;
 
   const { data: previous } = await supabase.from("custom_sections").select("*").eq("id", parsedId.data).maybeSingle();
   const { error } = await supabase.from("custom_sections").update(parsed.data).eq("id", parsedId.data);
@@ -1071,7 +1094,7 @@ export async function updateCustomSection(sectionId: string, formData: FormData)
   return { success: true };
 }
 
-export async function deleteCustomSection(sectionId: string) {
+export async function deleteCustomSection(sectionId: string, password: string) {
   const parsedId = uuidSchema.safeParse(sectionId);
   if (!parsedId.success) return { error: "Invalid custom section." };
   const supabase = createClient();
@@ -1079,6 +1102,8 @@ export async function deleteCustomSection(sectionId: string) {
   if (!auth || (auth.role !== "super_admin" && auth.role !== "administrator")) {
     return { error: "Only an Administrator can manage custom sections." };
   }
+  const passwordError = await requireSettingsPassword(supabase, auth, password);
+  if (passwordError) return passwordError;
 
   const { data: previous } = await supabase.from("custom_sections").select("*").eq("id", parsedId.data).maybeSingle();
   const { error } = await supabase.from("custom_sections").delete().eq("id", parsedId.data);
