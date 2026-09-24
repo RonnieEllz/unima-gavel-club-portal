@@ -14,7 +14,7 @@ export default async function AdminGalleryPage() {
       <h1 className="font-display text-3xl font-bold text-maroon-800">Photo Gallery</h1>
       <p className="mt-1 text-gray-600">
         Upload real UNIMA Gavel Club photographs: meetings, trainings, events and special
-        occasions.
+        occasions. Set a photo category to <span className="font-semibold">executive</span> to show it in the public executive members section.
       </p>
 
       <UploadForm />

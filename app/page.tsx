@@ -5,15 +5,16 @@ import Footer from "@/components/Footer";
 import StoryCard from "@/components/StoryCard";
 import UpdateCard from "@/components/UpdateCard";
 import MeetingCard from "@/components/MeetingCard";
-import { getUpcomingMeeting, getLatestPosts, getGalleryPreview, getSiteAnnouncement, getLandingPageSettings, getCustomSections, getCurrentUserProfile } from "@/lib/data";
+import { getUpcomingMeeting, getLatestPosts, getGalleryPreview, getExecutiveMembers, getSiteAnnouncement, getLandingPageSettings, getCustomSections, getCurrentUserProfile } from "@/lib/data";
 
 export default async function LandingPage() {
-  const [{ user }, meeting, stories, updates, gallery, announcement, settings, customSections] = await Promise.all([
+  const [{ user }, meeting, stories, updates, gallery, executiveMembers, announcement, settings, customSections] = await Promise.all([
     getCurrentUserProfile(),
     getUpcomingMeeting(),
     getLatestPosts("story", 3),
     getLatestPosts("update", 3),
     getGalleryPreview(8),
+    getExecutiveMembers(),
     getSiteAnnouncement(),
     getLandingPageSettings(),
     getCustomSections(),
@@ -214,6 +215,22 @@ export default async function LandingPage() {
             ))}
           </div>
         )}
+      </section>}
+
+      {executiveMembers.length > 0 && <section className="bg-maroon-50 py-16">
+        <div className="container-page">
+          <h2 className="text-center font-display text-3xl font-bold text-maroon-800">Our Executive Members</h2>
+          <div className="mt-8 grid grid-cols-2 gap-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+            {executiveMembers.map((member) => (
+              <div key={member.id} className="text-center">
+                <div className="mx-auto aspect-square w-32 overflow-hidden rounded-full border-4 border-white bg-maroon-100 shadow-md sm:w-36">
+                  <Image src={member.image_url} alt={member.caption ?? "Executive member"} width={144} height={144} className="h-full w-full object-cover" />
+                </div>
+                {member.caption && <p className="mt-3 text-sm font-semibold text-maroon-800">{member.caption}</p>}
+              </div>
+            ))}
+          </div>
+        </div>
       </section>}
 
       <Footer />
