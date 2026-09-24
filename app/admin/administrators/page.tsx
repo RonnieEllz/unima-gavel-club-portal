@@ -7,6 +7,7 @@ const rolePermissions: Record<string, string> = {
   super_admin: "Everything, including administrators, settings, audit, operations, and content",
   administrator: "Members, meetings, attendance, reports, exports, settings, audit, and content",
   operations_admin: "Members, meetings, attendance, reports, and exports",
+  treasurer: "Payment management only",
   content_administrator: "Stories, updates, gallery, and content management",
 };
 

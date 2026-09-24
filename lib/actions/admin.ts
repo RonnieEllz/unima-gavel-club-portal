@@ -5,8 +5,8 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { MembershipStatus, PostType, AdminRoleName } from "@/types/database";
 import { getAuthContext, isSuperAdmin } from "@/lib/authz";
-import { canManageOperations, canManageSemesters } from "@/lib/role-policy";
-import { recordAuditEvent } from "@/lib/actions/audit";
+import { canManageOperations, canManagePayments, canManageSemesters } from "@/lib/role-policy";
+import { recordAuditEvent, type AuditData } from "@/lib/actions/audit";
 import {
   adminRoleSchema,
   aboutPageSettingsSchema,
@@ -265,31 +265,27 @@ export async function setMemberPaymentStatus(memberId: string, paid: boolean) {
     .select("role")
     .eq("user_id", user.id)
     .maybeSingle();
-  if (!adminRole || !canManageOperations(adminRole.role as AdminRoleName)) {
-    return { error: "Only an operations administrator can update payment status." };
+  if (!adminRole || !canManagePayments(adminRole.role as AdminRoleName)) {
+    return { error: "Only an authorized payment administrator can update payment status." };
   }
 
-  const { data: previous, error: previousError } = await supabase
-    .from("profiles")
-    .select("payment_verified, last_payment_date")
-    .eq("id", parsedMemberId.data)
-    .maybeSingle();
-  if (previousError) return { error: `Unable to read payment status: ${previousError.message}` };
-  if (!previous) return { error: "Member not found." };
-
-  const nextPaymentDate = paid ? new Date().toISOString() : null;
-  const { error } = await supabase
-    .from("profiles")
-    .update({ payment_verified: paid, last_payment_date: nextPaymentDate })
-    .eq("id", parsedMemberId.data);
+  const { data: paymentChange, error } = await supabase.rpc("set_member_payment_status", {
+    target_member_id: parsedMemberId.data,
+    paid,
+  });
   if (error) return { error: `Unable to update payment status: ${error.message}` };
+
+  const change = paymentChange as {
+    before: { payment_verified: boolean; last_payment_date: string | null };
+    after: { payment_verified: boolean; last_payment_date: string | null };
+  };
 
   await recordAuditEvent({
     action: "member_payment_status_changed",
     entityType: "profile",
     entityId: parsedMemberId.data,
-    beforeData: previous,
-    afterData: { payment_verified: paid, last_payment_date: nextPaymentDate },
+    beforeData: change.before,
+    afterData: change.after,
   });
 
   revalidatePath("/admin/members");
@@ -298,6 +294,47 @@ export async function setMemberPaymentStatus(memberId: string, paid: boolean) {
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/profile");
   return { success: true };
+}
+
+export async function bulkSetMemberPaymentStatus(memberIds: string[], paid: boolean, password: string) {
+  const parsedMemberIds = z.array(uuidSchema).min(1).max(500).safeParse(memberIds);
+  const parsedPassword = z.string().min(8, "Enter your current password to confirm this payment update.").safeParse(password);
+  if (!parsedMemberIds.success) return { error: "Select at least one valid member." };
+  if (typeof paid !== "boolean") return { error: "Invalid payment status." };
+  if (!parsedPassword.success) return { error: parsedPassword.error.issues[0]?.message ?? "Enter your current password." };
+
+  const supabase = createClient();
+  const auth = await getAuthContext();
+  if (!auth || !canManagePayments(auth.role as AdminRoleName)) {
+    return { error: "Only an authorized payment administrator can update payment status." };
+  }
+  if (!(await confirmCurrentPassword(supabase, auth, parsedPassword.data))) {
+    return { error: "Password confirmation failed. No payment statuses were changed." };
+  }
+
+  const { data: changes, error } = await supabase.rpc("set_members_payment_status", {
+    target_member_ids: parsedMemberIds.data,
+    paid,
+  });
+  if (error) return { error: `Unable to update payment status: ${error.message}` };
+
+  for (const change of (changes ?? []) as { member_id: string; before_data: AuditData; after_data: AuditData }[]) {
+    await recordAuditEvent({
+      action: "member_payment_status_changed",
+      entityType: "profile",
+      entityId: change.member_id,
+      beforeData: change.before_data,
+      afterData: change.after_data,
+    });
+  }
+
+  revalidatePath("/admin/payments");
+  revalidatePath("/admin/members");
+  revalidatePath("/admin/reports");
+  revalidatePath("/admin");
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/profile");
+  return { success: true, updated: changes?.length ?? 0 };
 }
 
 export async function setMembershipStatus(memberId: string, status: MembershipStatus) {

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getCurrentUserProfile } from "@/lib/data";
 import { getActiveSemester } from "@/lib/data";
 import { calculateOperationalSummary } from "@/lib/operational-status";
+import { redirect } from "next/navigation";
 
 async function count(table: string, match?: Record<string, unknown>) {
   const supabase = createClient();
@@ -16,6 +17,7 @@ async function count(table: string, match?: Record<string, unknown>) {
 
 export default async function AdminOverviewPage() {
   const { adminRole } = await getCurrentUserProfile();
+  if (adminRole === "treasurer") redirect("/admin/payments");
   const isOperationsAdmin = adminRole === "operations_admin";
   const canManageSemesters = adminRole === "super_admin" || adminRole === "administrator";
   const supabase = createClient();

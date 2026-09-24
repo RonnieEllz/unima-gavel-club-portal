@@ -24,6 +24,10 @@ export function canManageOperations(role: AdminRoleName | null) {
   return role === "super_admin" || role === "administrator" || role === "operations_admin";
 }
 
+export function canManagePayments(role: AdminRoleName | null) {
+  return role === "super_admin" || role === "administrator" || role === "treasurer";
+}
+
 export function canManageSemesters(role: AdminRoleName | null) {
   return role === "super_admin" || role === "administrator";
 }
@@ -49,6 +53,7 @@ export function canAccessAdminPath(role: AdminRoleName | null, pathname: string)
   if (pathname === "/admin" || pathname === "/admin/") return true;
   if (pathname.startsWith("/admin/administrators")) return isSuperAdmin(role);
   if (pathname.startsWith("/admin/settings")) return canManageSettings(role);
+  if (pathname.startsWith("/admin/payments")) return canManagePayments(role);
   if (pathname.startsWith("/admin/audit")) return canViewAudit(role);
   if (pathname.startsWith("/admin/semesters")) return canManageSemesters(role);
   if (
@@ -59,6 +64,6 @@ export function canAccessAdminPath(role: AdminRoleName | null, pathname: string)
   ) {
     return canManageOperations(role);
   }
-  if (role === "operations_admin") return false;
+  if (role === "operations_admin" || role === "treasurer") return false;
   return hasContentAccess(role);
 }

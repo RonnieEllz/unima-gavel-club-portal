@@ -37,7 +37,7 @@ export const postSchema = z.object({
 });
 
 export const postTypeSchema = z.enum(["story", "update"]);
-export const adminRoleSchema = z.enum(["super_admin", "administrator", "operations_admin", "content_administrator"]);
+export const adminRoleSchema = z.enum(["super_admin", "administrator", "operations_admin", "treasurer", "content_administrator"]);
 
 const optionalImageSchema = z.string().trim().refine((value) => value === "" || isSafeImageUrl(value), "Use a secure image URL.");
 

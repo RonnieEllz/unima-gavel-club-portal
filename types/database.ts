@@ -1,7 +1,7 @@
 export type MembershipStatus = "pending" | "active" | "inactive" | "rejected" | "alumni";
 export type MemberSex = "male" | "female";
 export type PostType = "update" | "story";
-export type AdminRoleName = "super_admin" | "administrator" | "operations_admin" | "content_administrator";
+export type AdminRoleName = "super_admin" | "administrator" | "operations_admin" | "treasurer" | "content_administrator";
 
 export interface Profile {
   id: string;

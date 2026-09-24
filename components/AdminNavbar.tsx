@@ -4,6 +4,7 @@ import AdminNavGroup from "@/components/AdminNavGroup";
 
 export default function AdminNavbar({ role }: { role: string | null }) {
   const canManageOperations = role === "super_admin" || role === "administrator" || role === "operations_admin";
+  const canManagePayments = role === "super_admin" || role === "administrator" || role === "treasurer";
   const canManageSemesters = role === "super_admin" || role === "administrator";
   const isSuperAdmin = role === "super_admin";
   const usesGroupedNavigation = isSuperAdmin || role === "administrator";
@@ -19,6 +20,7 @@ export default function AdminNavbar({ role }: { role: string | null }) {
     : [];
   const operationsLinks = canManageOperations
     ? [
+        ...(canManagePayments ? [{ href: "/admin/payments", label: "Payments" }] : []),
         { href: "/admin/members", label: "Members" },
         { href: "/admin/meetings", label: "Meetings" },
         { href: "/admin/attendance", label: "Attendance" },
@@ -33,7 +35,8 @@ export default function AdminNavbar({ role }: { role: string | null }) {
         ...(isSuperAdmin ? [{ href: "/admin/administrators", label: "Administrators" }] : []),
       ]
     : [];
-  const flatLinks = role === "content_administrator" ? contentLinks : role === "operations_admin" ? operationsLinks : [];
+  const flatLinks = role === "content_administrator" ? contentLinks : role === "operations_admin" ? (canManagePayments ? [{ href: "/admin/payments", label: "Payments" }] : []) : [];
+  const adminHomePath = role === "treasurer" ? "/admin/payments" : "/admin";
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-ink-900/95 shadow-md backdrop-blur">
@@ -49,8 +52,8 @@ export default function AdminNavbar({ role }: { role: string | null }) {
           )}
         </div>
         <div className="flex w-full flex-wrap items-center gap-1 md:w-auto">
-          <Link href="/admin" className="rounded-md px-3 py-2 text-sm font-semibold text-white hover:bg-white/10">
-            {role === "operations_admin" ? "Operations Dashboard" : "Dashboard"}
+          <Link href={adminHomePath} className="rounded-md px-3 py-2 text-sm font-semibold text-white hover:bg-white/10">
+            {role === "operations_admin" ? "Operations Dashboard" : role === "treasurer" ? "Payments" : "Dashboard"}
           </Link>
           {usesGroupedNavigation ? (
             <>

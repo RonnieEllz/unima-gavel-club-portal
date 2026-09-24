@@ -121,13 +121,17 @@ Roles:
 - **Super Admin**: everything, including managing other administrators.
 - **Administrator**: members, meetings, attendance, and all content.
 - **Operations Administrator**: members, meetings, attendance, reports, and exports.
+- **Treasurer**: payment management only.
 - **Content Administrator**: updates, stories, and gallery only.
+
+The Payments page supports paid, unpaid, and all-member CSV exports. Batch payment changes require selecting members and confirming the Treasurer's password.
 
 For an existing Supabase project, run both migrations in filename order:
 `supabase/migrations/20260912_add_operations_admin.sql`, then
 `supabase/migrations/20260912_configure_operations_admin.sql`. The first migration
 must commit the enum value before the second migration references it. Apply both
 database migrations before assigning the Operations Administrator role.
+Then apply `supabase/migrations/20260924_add_treasurer_payment_access.sql`, commit it, and apply `supabase/migrations/20260924_configure_treasurer_payment_access.sql`. Finally apply `supabase/migrations/20260924_restrict_payment_access_from_operations.sql` before assigning the Treasurer role.
 
 ---
 

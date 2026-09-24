@@ -50,6 +50,7 @@ The system supports these roles:
 - Super Admin: full access
 - Administrator: members, meetings, attendance, and content
 - Operations Administrator: members, meetings, attendance, reports, and exports
+- Treasurer: payment management only
 - Content Administrator: updates, stories, and gallery only
 
 ---
@@ -237,6 +238,10 @@ Only Super Admins should manage administrator assignments.
 4. Save the change.
 
 This is where the club can give specific people access to administrative sections such as meetings, attendance, content, or full platform administration.
+
+Assign the Treasurer role to users who should manage payment status without access to wider operations. Treasurers use the Payments page to search members and mark them paid or unpaid.
+
+The Payments page also supports exports for all members, paid members, or unpaid members. For batch changes, select the members, choose the new payment status, and confirm with the Treasurer's password.
 
 ---
 

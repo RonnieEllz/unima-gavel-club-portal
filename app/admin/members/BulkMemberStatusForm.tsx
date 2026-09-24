@@ -13,7 +13,7 @@ const statusOptions: MembershipStatus[] = ["pending", "active", "inactive", "rej
 
 type MemberWithOperationalStatus = Profile & { operationalSummary: OperationalSummary; completedMeetingCount: number };
 
-export default function BulkMemberStatusForm({ members }: { members: MemberWithOperationalStatus[] }) {
+export default function BulkMemberStatusForm({ members, canManagePayments }: { members: MemberWithOperationalStatus[]; canManagePayments: boolean }) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [status, setStatus] = useState<MembershipStatus>("active");
   const [isPending, startTransition] = useTransition();
@@ -132,10 +132,10 @@ export default function BulkMemberStatusForm({ members }: { members: MemberWithO
                   <p className="text-gray-400">Membership</p>
                   <MemberStatusControl memberId={member.id} currentStatus={member.membership_status} />
                 </div>
-                <div>
+                {canManagePayments && <div>
                   <p className="text-gray-400">Payment</p>
                   <PaymentStatusControl memberId={member.id} paid={member.payment_verified} />
-                </div>
+                </div>}
                 <div>
                   <p className="text-gray-400">Operational</p>
                   <p className={member.operationalSummary.status === "active" ? "font-semibold text-green-700" : member.operationalSummary.status === "review" ? "font-semibold text-amber-700" : "text-gray-500"}>
@@ -180,7 +180,7 @@ export default function BulkMemberStatusForm({ members }: { members: MemberWithO
             <th className="px-4 py-3 font-semibold">Sex</th>
             <th className="px-4 py-3 font-semibold">Phone</th>
             <th className="px-4 py-3 font-semibold">Membership</th>
-            <th className="px-4 py-3 font-semibold">Payment</th>
+            {canManagePayments && <th className="px-4 py-3 font-semibold">Payment</th>}
             <th className="px-4 py-3 font-semibold">Operational</th>
             <th className="px-4 py-3 font-semibold">Actions</th>
           </tr>
@@ -209,12 +209,12 @@ export default function BulkMemberStatusForm({ members }: { members: MemberWithO
                 <td className="px-4 py-3 align-top">
                   <MemberStatusControl memberId={member.id} currentStatus={member.membership_status} />
                 </td>
-                <td className="px-4 py-3 align-top">
+                {canManagePayments && <td className="px-4 py-3 align-top">
                   <PaymentStatusControl memberId={member.id} paid={member.payment_verified} />
                   {member.last_payment_date && (
                     <p className="mt-1 text-xs text-gray-500">{new Date(member.last_payment_date).toLocaleDateString()}</p>
                   )}
-                </td>
+                </td>}
                 <td className="px-4 py-3 align-top">
                   <span
                     className={

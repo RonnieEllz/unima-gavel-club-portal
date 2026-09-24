@@ -48,6 +48,7 @@ export default function AdministratorsForm({
         <select name="role" required className="input-field">
           <option value="administrator">Administrator</option>
           <option value="operations_admin">Operations Administrator</option>
+          <option value="treasurer">Treasurer</option>
           <option value="content_administrator">Content Administrator</option>
           <option value="super_admin">Super Admin</option>
         </select>

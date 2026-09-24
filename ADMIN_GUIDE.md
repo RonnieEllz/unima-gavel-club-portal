@@ -92,7 +92,12 @@ Roles include:
 - Super Admin
 - Administrator
 - Operations Administrator
+- Treasurer
 - Content Administrator
+
+Treasurers can access the payment management view only. They can search members and mark payment status as paid or unpaid. They cannot manage members, meetings, attendance, reports, settings, audit history, semesters, or content.
+
+The Payments page supports exporting all, paid, or unpaid member records. Select multiple members, choose Mark paid or Mark unpaid, and confirm the action with your password.
 
 Only assign roles to trusted people.
 
