@@ -3,10 +3,15 @@ import type { GalleryImage } from "@/types/database";
 import UploadForm from "./UploadForm";
 import GalleryItemActions from "./GalleryItemActions";
 import { isSafeImageUrl } from "@/lib/validation";
+import Link from "next/link";
 
 export default async function AdminGalleryPage() {
   const supabase = createClient();
-  const { data: imageData, error } = await supabase.from("gallery").select("*").order("created_at", { ascending: false });
+  const { data: imageData, error } = await supabase
+    .from("gallery")
+    .select("*")
+    .not("category", "ilike", "%executive%")
+    .order("created_at", { ascending: false });
   const images = imageData as GalleryImage[] | null;
 
   return (
@@ -16,6 +21,9 @@ export default async function AdminGalleryPage() {
         Upload real UNIMA Gavel Club photographs: meetings, trainings, events and special
         occasions. Set a photo category to <span className="font-semibold">executive</span> to show it in the public executive members section.
       </p>
+      <Link href="/admin/gallery/executive" className="mt-3 inline-block text-sm font-semibold text-maroon-700 hover:underline">
+        Manage Club Leadership photos
+      </Link>
 
       <UploadForm />
 

@@ -97,6 +97,7 @@ export async function getGalleryPreview(limit = 8): Promise<GalleryImage[]> {
   const { data } = await supabase
     .from("gallery")
     .select("id, image_url, caption, is_featured, featured_order")
+    .not("category", "ilike", "%executive%")
     .order("is_featured", { ascending: false })
     .order("featured_order", { ascending: true })
     .order("created_at", { ascending: false })
@@ -109,7 +110,7 @@ export async function getExecutiveMembers(): Promise<GalleryImage[]> {
   const { data } = await supabase
     .from("gallery")
     .select("id, image_url, caption, category, is_featured, featured_order, uploaded_by, created_at")
-    .ilike("category", "executive")
+    .ilike("category", "%executive%")
     .order("featured_order", { ascending: true })
     .order("created_at", { ascending: true });
   return (data as GalleryImage[]) ?? [];

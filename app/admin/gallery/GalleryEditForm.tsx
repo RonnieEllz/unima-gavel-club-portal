@@ -9,12 +9,16 @@ export default function GalleryEditForm({
   category,
   isFeatured,
   featuredOrder,
+  lockCategory = false,
+  captionLabel = "Caption",
 }: {
   id: string;
   caption: string | null;
   category: string | null;
   isFeatured: boolean;
   featuredOrder: number;
+  lockCategory?: boolean;
+  captionLabel?: string;
 }) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -47,8 +51,13 @@ export default function GalleryEditForm({
           });
         }}
       >
-        <input name="caption" defaultValue={caption ?? ""} maxLength={500} className="input-field" aria-label="Photo caption" placeholder="Caption" />
-        <input name="category" defaultValue={category ?? ""} maxLength={100} className="input-field" aria-label="Photo category" placeholder="Category" />
+        <label className="label-field">{captionLabel}</label>
+        <input name="caption" defaultValue={caption ?? ""} maxLength={500} className="input-field" aria-label={captionLabel} placeholder={captionLabel} />
+        {lockCategory ? (
+          <input name="category" type="hidden" value="executive" readOnly />
+        ) : (
+          <input name="category" defaultValue={category ?? ""} maxLength={100} className="input-field" aria-label="Photo category" placeholder="Category" />
+        )}
         <label className="flex items-center gap-2 text-sm text-gray-700">
           <input type="checkbox" name="is_featured" defaultChecked={isFeatured} /> Feature on the landing page
         </label>

@@ -8,7 +8,7 @@ import { addGalleryImage } from "@/lib/actions/admin";
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_FILE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 
-export default function UploadForm() {
+export default function UploadForm({ fixedCategory, captionLabel = "Caption" }: { fixedCategory?: string; captionLabel?: string } = {}) {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const captionRef = useRef<HTMLInputElement>(null);
@@ -61,7 +61,7 @@ export default function UploadForm() {
 
       if (fileRef.current) fileRef.current.value = "";
       if (captionRef.current) captionRef.current.value = "";
-      if (categoryRef.current) categoryRef.current.value = "";
+      if (categoryRef.current) categoryRef.current.value = fixedCategory ?? "";
       if (featuredRef.current) featuredRef.current.checked = false;
       if (featuredOrderRef.current) featuredOrderRef.current.value = "0";
       router.refresh();
@@ -83,13 +83,17 @@ export default function UploadForm() {
         <input ref={fileRef} type="file" accept="image/*" required className="input-field" />
       </div>
       <div>
-        <label className="label-field">Caption</label>
+        <label className="label-field">{captionLabel}</label>
         <input ref={captionRef} className="input-field" />
       </div>
-      <div>
-        <label className="label-field">Category</label>
-        <input ref={categoryRef} placeholder="e.g. Meetings, Events" className="input-field" />
-      </div>
+      {fixedCategory ? (
+        <input ref={categoryRef} type="hidden" defaultValue={fixedCategory} />
+      ) : (
+        <div>
+          <label className="label-field">Category</label>
+          <input ref={categoryRef} placeholder="e.g. Meetings, Events" className="input-field" />
+        </div>
+      )}
       <label className="flex items-center gap-2 text-sm text-gray-700">
         <input ref={featuredRef} type="checkbox" /> Feature on the landing page
       </label>

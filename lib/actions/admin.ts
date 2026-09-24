@@ -718,6 +718,7 @@ export async function addGalleryImage(
   });
 
   revalidatePath("/admin/gallery");
+  revalidatePath("/admin/gallery/executive");
   revalidatePath("/");
   return { success: true };
 }
@@ -758,6 +759,7 @@ export async function updateGalleryImage(
   });
 
   revalidatePath("/admin/gallery");
+  revalidatePath("/admin/gallery/executive");
   revalidatePath("/");
   return { success: true };
 }
@@ -780,6 +782,7 @@ export async function deleteGalleryImage(id: string) {
   });
 
   revalidatePath("/admin/gallery");
+  revalidatePath("/admin/gallery/executive");
   return { success: true };
 }
 
