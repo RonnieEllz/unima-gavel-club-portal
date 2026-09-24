@@ -995,6 +995,56 @@ export async function updateWhatsAppGroupLink(formData: FormData) {
   return { success: true };
 }
 
+export async function updateMembershipPaymentDetails(formData: FormData) {
+  const paymentDetails = {
+    membership_fee_amount: String(formData.get("membership_fee_amount") ?? "").trim().slice(0, 250),
+    bank_nb_name: String(formData.get("bank_nb_name") ?? "").trim().slice(0, 250),
+    bank_nb_number: String(formData.get("bank_nb_number") ?? "").trim().slice(0, 250),
+    mpamba_name: String(formData.get("mpamba_name") ?? "").trim().slice(0, 250),
+    mpamba_number: String(formData.get("mpamba_number") ?? "").trim().slice(0, 250),
+    airtel_money_name: String(formData.get("airtel_money_name") ?? "").trim().slice(0, 250),
+    airtel_money_number: String(formData.get("airtel_money_number") ?? "").trim().slice(0, 250),
+  };
+
+  const supabase = createClient();
+  const auth = await getAuthContext();
+  if (!auth || !canManagePayments(auth.role as AdminRoleName)) {
+    return { error: "Only a payment administrator can update membership payment details." };
+  }
+  const passwordError = await requireSettingsPassword(supabase, auth, String(formData.get("settings_password") ?? ""));
+  if (passwordError) return passwordError;
+
+  const keys = [
+    ["membership_fee_amount", paymentDetails.membership_fee_amount],
+    ["membership_fee_bank_nb_name", paymentDetails.bank_nb_name],
+    ["membership_fee_bank_nb_number", paymentDetails.bank_nb_number],
+    ["membership_fee_mpamba_name", paymentDetails.mpamba_name],
+    ["membership_fee_mpamba_number", paymentDetails.mpamba_number],
+    ["membership_fee_airtel_money_name", paymentDetails.airtel_money_name],
+    ["membership_fee_airtel_money_number", paymentDetails.airtel_money_number],
+  ] as const;
+
+  const previous = await supabase.from("site_settings").select("key, value").in("key", keys.map(([key]) => key));
+  const previousMap = new Map((previous.data ?? []).map((item) => [item.key, item.value]));
+
+  for (const [key, value] of keys) {
+    const { error } = await supabase.from("site_settings").upsert({ key, value, updated_by: auth.userId }, { onConflict: "key" });
+    if (error) return { error: error.message };
+    await recordAuditEvent({
+      action: "membership_payment_details_updated",
+      entityType: "site_setting",
+      entityId: key,
+      beforeData: previousMap.has(key) ? { value: previousMap.get(key) } : null,
+      afterData: { value },
+    });
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath("/admin/payments");
+  revalidatePath("/admin/payments/accounts");
+  return { success: true };
+}
+
 async function updateLandingSettingsSection(
   formData: FormData,
   schema: z.AnyZodObject,

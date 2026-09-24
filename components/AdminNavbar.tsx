@@ -20,7 +20,7 @@ export default function AdminNavbar({ role }: { role: string | null }) {
     : [];
   const operationsLinks = canManageOperations
     ? [
-        ...(canManagePayments ? [{ href: "/admin/payments", label: "Payments" }] : []),
+        ...(canManagePayments ? [{ href: "/admin/payments", label: "Payments" }, { href: "/admin/payments/accounts", label: "Payment accounts" }] : []),
         { href: "/admin/members", label: "Members" },
         { href: "/admin/meetings", label: "Meetings" },
         { href: "/admin/attendance", label: "Attendance" },
@@ -35,7 +35,13 @@ export default function AdminNavbar({ role }: { role: string | null }) {
         ...(isSuperAdmin ? [{ href: "/admin/administrators", label: "Administrators" }] : []),
       ]
     : [];
-  const flatLinks = role === "content_administrator" ? contentLinks : role === "operations_admin" ? (canManagePayments ? [{ href: "/admin/payments", label: "Payments" }] : []) : [];
+  const flatLinks = role === "content_administrator"
+    ? contentLinks
+    : role === "operations_admin"
+      ? (canManagePayments ? [{ href: "/admin/payments", label: "Payments" }, { href: "/admin/payments/accounts", label: "Payment accounts" }] : [])
+      : role === "treasurer"
+        ? [{ href: "/admin/payments/accounts", label: "Payment accounts" }]
+        : [];
   const adminHomePath = role === "treasurer" ? "/admin/payments" : "/admin";
 
   return (

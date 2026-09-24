@@ -33,7 +33,7 @@ export function canManageSemesters(role: AdminRoleName | null) {
 }
 
 export function canManageSettings(role: AdminRoleName | null) {
-  return role === "super_admin" || role === "administrator" || role === "operations_admin";
+  return role === "super_admin" || role === "administrator";
 }
 
 export function canViewAudit(role: AdminRoleName | null) {

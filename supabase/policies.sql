@@ -353,7 +353,10 @@ create policy "gallery_update_content_admin"
 -- ---------------------------------------------------------------------------
 create policy "site_settings_select_admin"
   on site_settings for select
-  using (can_manage_settings());
+  using (
+    can_manage_settings()
+    or (can_manage_payments() and key like 'membership_fee_%')
+  );
 
 create policy "site_settings_select_public_announcement"
   on site_settings for select
@@ -386,16 +389,28 @@ create policy "landing_page_settings_update_admin"
 
 create policy "site_settings_insert_admin"
   on site_settings for insert
-  with check (can_manage_settings());
+  with check (
+    can_manage_settings()
+    or (can_manage_payments() and key like 'membership_fee_%')
+  );
 
 create policy "site_settings_update_admin"
   on site_settings for update
-  using (can_manage_settings())
-  with check (can_manage_settings());
+  using (
+    can_manage_settings()
+    or (can_manage_payments() and key like 'membership_fee_%')
+  )
+  with check (
+    can_manage_settings()
+    or (can_manage_payments() and key like 'membership_fee_%')
+  );
 
 create policy "site_settings_delete_admin"
   on site_settings for delete
-  using (can_manage_settings());
+  using (
+    can_manage_settings()
+    or (can_manage_payments() and key like 'membership_fee_%')
+  );
 
 -- ---------------------------------------------------------------------------
 -- STORAGE POLICIES

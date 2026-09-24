@@ -97,15 +97,17 @@ export default async function AdminReportsPage({
         </div>
       </div>
 
-      <form method="get" className="mt-6 flex flex-wrap items-end gap-3 rounded-md border border-gray-200 bg-white p-4">
-        <input name="program" defaultValue={program} placeholder="Program" className="input-field max-w-[12rem]" />
-        <select name="year" defaultValue={searchParams.year} className="input-field max-w-[9rem]">
+      <form method="get" className="mt-6 grid gap-3 rounded-md border border-gray-200 bg-white p-4 sm:flex sm:flex-wrap sm:items-end sm:gap-3">
+        <input name="program" defaultValue={program} placeholder="Program" className="input-field w-full sm:max-w-[12rem]" />
+        <select name="year" defaultValue={searchParams.year} className="input-field w-full sm:max-w-[9rem]">
           <option value="">All years</option>
           {[1, 2, 3, 4, 5].map((value) => <option key={value} value={value}>Year {value}</option>)}
         </select>
-        <input name="q" defaultValue={q} placeholder="Search meeting" className="input-field max-w-[14rem]" />
-        <button className="btn-secondary !px-4 !py-2 text-sm">Filter</button>
-        <Link href="/admin/reports" className="btn-secondary !px-4 !py-2 text-sm">Clear</Link>
+        <input name="q" defaultValue={q} placeholder="Search meeting" className="input-field w-full sm:max-w-[14rem]" />
+        <div className="flex w-full gap-3 sm:w-auto">
+          <button className="btn-secondary flex-1 !px-4 !py-2 text-sm sm:flex-none">Filter</button>
+          <Link href="/admin/reports" className="btn-secondary flex-1 !px-4 !py-2 text-sm text-center sm:flex-none">Clear</Link>
+        </div>
       </form>
 
       {invalidRange && <p className="mt-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">The start date cannot be after the end date.</p>}

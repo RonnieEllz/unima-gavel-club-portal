@@ -138,6 +138,43 @@ export async function getWhatsAppGroupLink(): Promise<string> {
   return (data?.value as string | null) ?? "";
 }
 
+export async function getMembershipPaymentDetails() {
+  const supabase = createClient();
+  const keys = [
+    "membership_fee_amount",
+    "membership_fee_bank_nb_name",
+    "membership_fee_bank_nb_number",
+    "membership_fee_mpamba_name",
+    "membership_fee_mpamba_number",
+    "membership_fee_airtel_money_name",
+    "membership_fee_airtel_money_number",
+  ];
+  const { data } = await supabase.from("site_settings").select("key, value").in("key", keys);
+
+  const values = {
+    membership_fee_amount: "",
+    bank_nb_name: "",
+    bank_nb_number: "",
+    mpamba_name: "",
+    mpamba_number: "",
+    airtel_money_name: "",
+    airtel_money_number: "",
+  };
+
+  for (const row of data ?? []) {
+    const value = typeof row.value === "string" ? row.value.trim() : "";
+    if (row.key === "membership_fee_amount") values.membership_fee_amount = value;
+    if (row.key === "membership_fee_bank_nb_name") values.bank_nb_name = value;
+    if (row.key === "membership_fee_bank_nb_number") values.bank_nb_number = value;
+    if (row.key === "membership_fee_mpamba_name") values.mpamba_name = value;
+    if (row.key === "membership_fee_mpamba_number") values.mpamba_number = value;
+    if (row.key === "membership_fee_airtel_money_name") values.airtel_money_name = value;
+    if (row.key === "membership_fee_airtel_money_number") values.airtel_money_number = value;
+  }
+
+  return values;
+}
+
 export async function getUpcomingMeetings(limit = 5): Promise<Meeting[]> {
   const supabase = createClient();
   const today = new Date().toISOString().slice(0, 10);

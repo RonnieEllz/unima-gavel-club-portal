@@ -6,6 +6,7 @@ import {
   getUpcomingMeetings,
   getLatestPosts,
   getWhatsAppGroupLink,
+  getMembershipPaymentDetails,
 } from "@/lib/data";
 import { calculateOperationalSummary } from "@/lib/operational-status";
 import UpdateCard from "@/components/UpdateCard";
@@ -25,13 +26,14 @@ export default async function DashboardPage() {
   const current = await getCurrentUserProfile();
   const user = current.user;
   const profile = current.profile as Profile | null;
-  const [history, semesterMeetings, upcomingMeetings, updates, stories, whatsappGroupLink] = await Promise.all([
+  const [history, semesterMeetings, upcomingMeetings, updates, stories, whatsappGroupLink, paymentDetails] = await Promise.all([
     user ? getMemberAttendanceHistory(user.id) : Promise.resolve([]),
     getActiveSemesterMeetings(),
     getUpcomingMeetings(1),
     getLatestPosts("update", 2),
     getLatestPosts("story", 2),
     getWhatsAppGroupLink(),
+    getMembershipPaymentDetails(),
   ]);
 
   const semesterMeetingIds = new Set(semesterMeetings.map((meeting) => meeting.id));
@@ -43,6 +45,20 @@ export default async function DashboardPage() {
   const nextMeetingAlreadyCheckedIn = nextMeeting ? checkedInMeetingIds.has(nextMeeting.id) : false;
   const isNewMember = profile?.membership_status === "pending";
   const showWhatsAppCallout = !!whatsappGroupLink && isNewMember;
+  const paymentMethods = [
+    {
+      label: "Bank (NB)",
+      text: [paymentDetails.bank_nb_name, paymentDetails.bank_nb_number].filter(Boolean).join("\n"),
+    },
+    {
+      label: "Mpamba",
+      text: [paymentDetails.mpamba_name, paymentDetails.mpamba_number].filter(Boolean).join("\n"),
+    },
+    {
+      label: "Airtel Money",
+      text: [paymentDetails.airtel_money_name, paymentDetails.airtel_money_number].filter(Boolean).join("\n"),
+    },
+  ].filter((method) => method.text);
   const operationalSummary = profile && profile.membership_status === "active"
     ? calculateOperationalSummary({
         membershipStatus: profile.membership_status,
@@ -161,6 +177,24 @@ export default async function DashboardPage() {
           </div>
         </section>
       </div>
+
+      {paymentMethods.length > 0 && (
+        <section className="card p-5 sm:p-6">
+          <h2 className="font-display text-lg font-bold text-maroon-800 sm:text-xl">Membership payment details</h2>
+          {paymentDetails.membership_fee_amount && (
+            <p className="mt-2 text-sm font-semibold text-maroon-700">Membership fee: {paymentDetails.membership_fee_amount}</p>
+          )}
+          <p className="mt-1 text-sm text-gray-600">Pay your membership fee using any of the methods below.</p>
+          <div className="mt-5 grid gap-4 md:grid-cols-3">
+            {paymentMethods.map((method) => (
+              <div key={method.label} className="rounded-lg border border-maroon-100 bg-maroon-50/40 p-4">
+                <p className="text-sm font-semibold uppercase tracking-wide text-maroon-700">{method.label}</p>
+                <p className="mt-2 text-sm text-gray-700 whitespace-pre-line">{method.text}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
