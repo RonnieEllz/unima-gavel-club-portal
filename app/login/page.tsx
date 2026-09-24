@@ -17,17 +17,10 @@ function SubmitButton() {
   );
 }
 
-function getTimeoutMinutes() {
-  const configuredMinutes = Number(process.env.NEXT_PUBLIC_SESSION_TIMEOUT_MINUTES ?? 60);
-  const safeMinutes = Number.isFinite(configuredMinutes) && configuredMinutes > 0 ? configuredMinutes : 60;
-  return safeMinutes;
-}
-
 export default function LoginPage() {
   const [state, formAction] = useFormState(loginMember, initialState);
   const params = useSearchParams();
   const next = params.get("next") ?? "/dashboard";
-  const timeoutMinutes = getTimeoutMinutes();
 
   return (
     <>
@@ -39,12 +32,6 @@ export default function LoginPage() {
 
           {state.error && (
             <p className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{state.error}</p>
-          )}
-
-          {params.get("timeout") === "1" && (
-            <p className="mt-4 rounded-md bg-amber-50 p-3 text-sm text-amber-800">
-              Your session timed out after {timeoutMinutes} minutes of inactivity. Please sign in again.
-            </p>
           )}
 
           <form action={formAction} className="mt-6 space-y-4">

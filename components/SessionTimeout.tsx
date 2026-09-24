@@ -21,7 +21,7 @@ export default function SessionTimeout() {
     try {
       await supabase.auth.signOut();
     } finally {
-      router.push("/login?timeout=1");
+      router.push("/login");
       router.refresh();
     }
   };
