@@ -66,15 +66,23 @@ export async function getActiveSemester(): Promise<Semester | null> {
 }
 
 export async function getUpcomingMeeting(): Promise<Meeting | null> {
+  const semester = await getActiveSemester();
   const supabase = createClient();
   const today = new Date().toISOString().slice(0, 10);
-  const { data } = await supabase
+  let query = supabase
     .from("meetings")
     .select("id, title, date, time, venue, description, attendance_open, created_by, created_at")
     .gte("date", today)
     .order("date", { ascending: true })
-    .limit(1)
-    .maybeSingle();
+    .order("time", { ascending: true });
+
+  if (semester) {
+    query = query.eq("semester_id", semester.id);
+  } else {
+    return null;
+  }
+
+  const { data } = await query.limit(1).maybeSingle();
   return data as Meeting | null;
 }
 
@@ -176,11 +184,15 @@ export async function getMembershipPaymentDetails() {
 }
 
 export async function getUpcomingMeetings(limit = 5): Promise<Meeting[]> {
+  const semester = await getActiveSemester();
+  if (!semester) return [];
+
   const supabase = createClient();
   const today = new Date().toISOString().slice(0, 10);
   const { data } = await supabase
     .from("meetings")
     .select("*")
+    .eq("semester_id", semester.id)
     .gte("date", today)
     .order("date", { ascending: true })
     .order("time", { ascending: true })

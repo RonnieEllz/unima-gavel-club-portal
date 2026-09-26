@@ -33,11 +33,17 @@ export default async function AttendanceHistoryPage() {
     .eq("member_id", user.id)
     .order("checked_in_at", { ascending: false });
 
-  const { data: meetingData } = await supabase
-    .from("meetings")
-    .select("id, title, date")
-    .lte("date", new Date().toISOString().slice(0, 10))
-    .order("date", { ascending: false });
+  const activeSemester = await supabase.from("semesters").select("id").eq("is_active", true).maybeSingle();
+  const activeSemesterId = activeSemester.data?.id ?? null;
+
+  const { data: meetingData } = activeSemesterId
+    ? await supabase
+        .from("meetings")
+        .select("id, title, date")
+        .eq("semester_id", activeSemesterId)
+        .lte("date", new Date().toISOString().slice(0, 10))
+        .order("date", { ascending: false })
+    : { data: [] };
   const allMeetings = meetingData as Pick<Meeting, "id" | "title" | "date">[] | null;
 
   const attendedMeetingIds = new Set((records ?? []).map((r: any) => r.meetings?.id));

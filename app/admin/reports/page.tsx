@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { calculateOperationalSummary } from "@/lib/operational-status";
-import { getActiveSemester } from "@/lib/data";
+import { getActiveSemester, getCurrentUserProfile } from "@/lib/data";
 import ReportTools from "./ReportTools";
 
 const validDate = (value?: string) => value && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : "";
@@ -23,6 +23,7 @@ export default async function AdminReportsPage({
   const q = searchParams.q?.trim().slice(0, 100) ?? "";
   const invalidRange = Boolean(from && to && from > to);
   const supabase = createClient();
+  const { adminRole } = await getCurrentUserProfile();
   const activeSemester = await getActiveSemester();
   const noActiveSemesterMessage = !activeSemester
     ? "No active semester is configured. Create or activate a semester before running attendance reports."
@@ -96,6 +97,14 @@ export default async function AdminReportsPage({
           <p className="mt-1 text-gray-600">Review attendance by meeting date and export the selected range.</p>
         </div>
       </div>
+
+      {activeSemester && adminRole === "super_admin" && (
+        <div className="mt-4 rounded-md border border-maroon-200 bg-maroon-50 px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-maroon-700">Current club term</p>
+          <p className="mt-1 text-sm font-semibold text-gray-800">{activeSemester.name}</p>
+          <p className="text-xs text-gray-600">{activeSemester.starts_on} to {activeSemester.ends_on}</p>
+        </div>
+      )}
 
       <form method="get" className="mt-6 grid gap-3 rounded-md border border-gray-200 bg-white p-4 sm:flex sm:flex-wrap sm:items-end sm:gap-3">
         <input name="program" defaultValue={program} placeholder="Program" className="input-field w-full sm:max-w-[12rem]" />

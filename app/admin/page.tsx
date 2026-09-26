@@ -20,33 +20,57 @@ export default async function AdminOverviewPage() {
   if (adminRole === "treasurer") redirect("/admin/payments");
   const isOperationsAdmin = adminRole === "operations_admin";
   const canManageSemesters = adminRole === "super_admin" || adminRole === "administrator";
+  const activeSemester = await getActiveSemester();
   const supabase = createClient();
+  const semesterMeetingIds = activeSemester
+    ? (await supabase.from("meetings").select("id").eq("semester_id", activeSemester.id).then((result) => (result.data ?? []).map((meeting) => meeting.id)))
+    : [];
 
   if (isOperationsAdmin) {
     const today = new Date().toISOString().slice(0, 10);
-    const activeSemester = await getActiveSemester();
+    const baseMeetingQuery = activeSemester
+      ? supabase.from("meetings").select("id, title, date, time, venue, attendance_open").eq("semester_id", activeSemester.id)
+      : null;
+
     const [{ count: pendingCount }, { data: pendingMembers }, { data: upcomingMeeting }, { data: operationalProfiles }, { data: allMeetings }, { data: allAttendance }, { count: recentAttendance }, { data: recentMeetings }] = await Promise.all([
       supabase.from("profiles").select("id", { count: "exact", head: true }).eq("membership_status", "pending"),
       supabase.from("profiles").select("id, full_name, program, year_of_study, payment_verified").eq("membership_status", "pending").order("full_name").limit(5),
-      supabase
-        .from("meetings")
-        .select("id, title, date, time, venue, attendance_open")
-        .gte("date", today)
-        .order("date", { ascending: true })
-        .order("time", { ascending: true })
-        .limit(1)
-        .maybeSingle(),
+      baseMeetingQuery
+        ? baseMeetingQuery
+            .gte("date", today)
+            .order("date", { ascending: true })
+            .order("time", { ascending: true })
+            .limit(1)
+            .maybeSingle()
+        : Promise.resolve({ data: null, error: null }),
       supabase.from("profiles").select("id, membership_status, membership_activated_at, payment_verified"),
       activeSemester
         ? supabase.from("meetings").select("id, date").eq("semester_id", activeSemester.id)
         : supabase.from("meetings").select("id, date").eq("id", "00000000-0000-0000-0000-000000000000"),
-      supabase.from("attendance").select("member_id, meeting_id"),
-      supabase.from("attendance").select("id", { count: "exact", head: true }).gte("checked_in_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
-      supabase
-        .from("meetings")
-        .select("id, title, date, time, venue, attendance_open")
-        .order("date", { ascending: false })
-        .limit(5),
+      activeSemester
+        ? supabase
+            .from("attendance")
+            .select("member_id, meeting_id")
+            .in(
+              "meeting_id",
+              (await supabase.from("meetings").select("id").eq("semester_id", activeSemester.id).then((result) => (result.data ?? []).map((meeting) => meeting.id)))
+            )
+        : supabase.from("attendance").select("member_id, meeting_id"),
+      activeSemester
+        ? supabase
+            .from("attendance")
+            .select("id", { count: "exact", head: true })
+            .in(
+              "meeting_id",
+              (await supabase.from("meetings").select("id").eq("semester_id", activeSemester.id).then((result) => (result.data ?? []).map((meeting) => meeting.id)))
+            )
+            .gte("checked_in_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+        : supabase.from("attendance").select("id", { count: "exact", head: true }).gte("checked_in_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
+      baseMeetingQuery
+        ? baseMeetingQuery
+            .order("date", { ascending: false })
+            .limit(5)
+        : Promise.resolve({ data: [], error: null }),
     ]);
 
     const operationalSummaries = (operationalProfiles ?? []).map((member) => calculateOperationalSummary({
@@ -91,6 +115,14 @@ export default async function AdminOverviewPage() {
           </div>
           <Link href="/api/export/members" className="btn-secondary !px-4 !py-2 text-sm">Export members</Link>
         </div>
+
+        {adminRole === "super_admin" && activeSemester && (
+          <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">Current club term</p>
+            <p className="mt-1 text-sm font-semibold text-gray-800">{activeSemester.name}</p>
+            <p className="text-xs text-gray-600">{activeSemester.starts_on} to {activeSemester.ends_on}</p>
+          </div>
+        )}
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
@@ -204,8 +236,12 @@ export default async function AdminOverviewPage() {
     count("profiles", { membership_status: "pending" }),
     count("profiles", { membership_status: "inactive" }),
     count("profiles", { membership_status: "rejected" }),
-    count("meetings"),
-    count("attendance"),
+    activeSemester
+      ? count("meetings", { semester_id: activeSemester.id })
+      : count("meetings"),
+    semesterMeetingIds.length > 0
+      ? supabase.from("attendance").select("id", { count: "exact", head: true }).in("meeting_id", semesterMeetingIds).then((result) => result.count ?? 0)
+      : 0,
     count("posts", { post_type: "update", published: true }),
     count("posts", { post_type: "story", published: true }),
   ]);
@@ -231,6 +267,15 @@ export default async function AdminOverviewPage() {
   return (
     <div>
       <h1 className="font-display text-3xl font-bold text-maroon-800">Admin Dashboard</h1>
+
+      {activeSemester && (
+        <div className="mt-4 rounded-md border border-maroon-200 bg-maroon-50 px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-maroon-700">Current club term</p>
+          <p className="mt-1 text-sm font-semibold text-gray-800">{activeSemester.name}</p>
+          <p className="text-xs text-gray-600">{activeSemester.starts_on} to {activeSemester.ends_on}</p>
+        </div>
+      )}
+
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((s) => (
           <div key={s.label} className="card p-6">

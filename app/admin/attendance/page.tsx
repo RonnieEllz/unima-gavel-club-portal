@@ -8,10 +8,15 @@ export default async function AdminAttendancePage({
   searchParams: { meeting?: string };
 }) {
   const supabase = createClient();
-  const { data: meetingData, error: meetingsError } = await supabase
-    .from("meetings")
-    .select("id, title, date")
-    .order("date", { ascending: false });
+  const activeSemester = await supabase.from("semesters").select("id").eq("is_active", true).maybeSingle();
+  const activeSemesterId = activeSemester.data?.id ?? null;
+  const { data: meetingData, error: meetingsError } = activeSemesterId
+    ? await supabase
+        .from("meetings")
+        .select("id, title, date")
+        .eq("semester_id", activeSemesterId)
+        .order("date", { ascending: false })
+    : { data: [], error: null };
   const meetings = meetingData as Pick<Meeting, "id" | "title" | "date">[] | null;
 
   const { data: memberData } = await supabase

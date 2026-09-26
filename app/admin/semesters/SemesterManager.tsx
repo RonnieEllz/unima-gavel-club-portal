@@ -10,7 +10,9 @@ export default function SemesterManager({ semesters }: { semesters: Semester[] }
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pendingClose, setPendingClose] = useState<Semester | null>(null);
+  const [pendingActivate, setPendingActivate] = useState<Semester | null>(null);
   const router = useRouter();
+  const activeSemester = semesters.find((semester) => semester.is_active) ?? null;
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -36,21 +38,44 @@ export default function SemesterManager({ semesters }: { semesters: Semester[] }
         {error && <p className="text-sm text-red-600">{error}</p>}
       </form>
       <section className="card p-6">
-        <h2 className="font-display text-xl font-bold text-maroon-800">Semesters</h2>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="font-display text-xl font-bold text-maroon-800">Semesters</h2>
+          {activeSemester ? (
+            <span className="rounded-full bg-green-100 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-green-800">
+              Current club term
+            </span>
+          ) : (
+            <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-amber-800">
+              No active term
+            </span>
+          )}
+        </div>
+
+        {activeSemester && (
+          <div className="mt-4 rounded-md border border-green-200 bg-green-50 p-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-green-800">Active semester</p>
+            <p className="mt-1 font-semibold text-gray-800">{activeSemester.name}</p>
+            <p className="text-xs text-gray-600">{activeSemester.starts_on} to {activeSemester.ends_on}</p>
+          </div>
+        )}
+
         <div className="mt-4 space-y-3">
           {semesters.map((semester) => (
             <div key={semester.id} className="flex items-center justify-between gap-3 rounded-md border border-gray-200 p-3">
-              <div><p className="font-semibold text-gray-800">{semester.name}</p><p className="text-xs text-gray-500">{semester.starts_on} to {semester.ends_on}</p></div>
+              <div>
+                <p className="font-semibold text-gray-800">{semester.name}</p>
+                <p className="text-xs text-gray-500">{semester.starts_on} to {semester.ends_on}</p>
+              </div>
               <div className="flex items-center gap-2">
                 {semester.completed_at ? (
                   <span className="text-xs font-semibold text-gray-500">Completed</span>
                 ) : semester.is_active ? (
                   <span className="text-xs font-semibold text-green-700">Active</span>
                 ) : (
-                  <button type="button" disabled={isPending} onClick={() => startTransition(async () => { setMessage(null); setError(null); const result = await activateSemester(semester.id); if (result.error) setError(result.error); else { setMessage("Semester activated."); router.refresh(); } })} className="btn-secondary !px-3 !py-1 text-xs">Activate</button>
+                  <button type="button" disabled={isPending} onClick={() => { setError(null); setPendingActivate(semester); }} className="btn-secondary !px-3 !py-1 text-xs">Set active</button>
                 )}
                 {!semester.completed_at && new Date(`${semester.ends_on}T00:00:00Z`) < new Date() && (
-                  <button type="button" disabled={isPending} onClick={() => { setError(null); setPendingClose(semester); }} className="btn-primary !px-3 !py-1 text-xs">Close semester</button>
+                  <button type="button" disabled={isPending} onClick={() => { setError(null); setPendingClose(semester); }} className="btn-primary !px-3 !py-1 text-xs">Close</button>
                 )}
               </div>
             </div>
@@ -58,6 +83,43 @@ export default function SemesterManager({ semesters }: { semesters: Semester[] }
           {semesters.length === 0 && <p className="text-sm text-gray-500">No semesters configured.</p>}
         </div>
       </section>
+
+      {pendingActivate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/60 p-4" role="presentation">
+          <div className="card w-full max-w-md p-6" role="dialog" aria-modal="true" aria-labelledby="activate-semester-title">
+            <h2 id="activate-semester-title" className="font-display text-xl font-bold text-maroon-800">Activate semester</h2>
+            <p className="mt-2 text-sm text-gray-600">
+              This will make <span className="font-semibold">{pendingActivate.name}</span> the current club term for all live reports, dashboard data, and active-member tracking.
+            </p>
+            <div className="mt-5 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+              Any reports and operational summaries shown to the club will switch to this semester until another term is activated.
+            </div>
+            <div className="mt-5 flex justify-end gap-3">
+              <button type="button" onClick={() => { setPendingActivate(null); setError(null); }} className="btn-secondary !px-4 !py-2 text-sm">Cancel</button>
+              <button
+                type="button"
+                disabled={isPending}
+                onClick={() => {
+                  startTransition(async () => {
+                    setMessage(null);
+                    setError(null);
+                    const result = await activateSemester(pendingActivate.id);
+                    if (result.error) setError(result.error);
+                    else {
+                      setPendingActivate(null);
+                      setMessage(`${pendingActivate.name} is now the active club term.`);
+                      router.refresh();
+                    }
+                  });
+                }}
+                className="btn-primary !px-4 !py-2 text-sm"
+              >
+                {isPending ? "Activating..." : "Confirm activation"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {pendingClose && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/60 p-4" role="presentation">

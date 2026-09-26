@@ -16,12 +16,17 @@ export default async function MeetingsPage() {
     .maybeSingle();
 
   const canCheckIn = canAccessOperationalFeatures(profile?.membership_status ?? null);
+  const activeSemester = await supabase.from("semesters").select("id").eq("is_active", true).maybeSingle();
+  const activeSemesterId = activeSemester.data?.id ?? null;
 
-  const { data: meetingData, error: meetingsError } = await supabase
-    .from("meetings")
-    .select("*")
-    .order("date", { ascending: false })
-    .limit(20);
+  const { data: meetingData, error: meetingsError } = activeSemesterId
+    ? await supabase
+        .from("meetings")
+        .select("*")
+        .eq("semester_id", activeSemesterId)
+        .order("date", { ascending: false })
+        .limit(20)
+    : { data: [], error: null };
   const meetings = meetingData as Meeting[] | null;
 
   const { data: attendanceData } = user

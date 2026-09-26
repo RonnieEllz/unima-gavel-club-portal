@@ -9,6 +9,8 @@ export default async function AdminMeetingsPage({
   searchParams: { view?: string; q?: string };
 }) {
   const supabase = createClient();
+  const activeSemester = await supabase.from("semesters").select("id").eq("is_active", true).maybeSingle();
+  const activeSemesterId = activeSemester.data?.id ?? null;
   const view = searchParams.view === "past" || searchParams.view === "all" ? searchParams.view : "upcoming";
   const q = searchParams.q?.trim().slice(0, 100) ?? "";
   let meetingsQuery = supabase
@@ -16,6 +18,13 @@ export default async function AdminMeetingsPage({
     .select("*")
     .order("date", { ascending: view === "past" })
     .order("time", { ascending: view === "past" });
+
+  if (activeSemesterId) {
+    meetingsQuery = meetingsQuery.eq("semester_id", activeSemesterId);
+  } else {
+    meetingsQuery = meetingsQuery.eq("id", "00000000-0000-0000-0000-000000000000");
+  }
+
   const today = new Date().toISOString().slice(0, 10);
   if (view === "upcoming") meetingsQuery = meetingsQuery.gte("date", today);
   if (view === "past") meetingsQuery = meetingsQuery.lt("date", today);
