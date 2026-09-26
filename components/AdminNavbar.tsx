@@ -7,7 +7,7 @@ export default function AdminNavbar({ role }: { role: string | null }) {
   const canManagePayments = role === "super_admin" || role === "administrator" || role === "treasurer";
   const canManageSemesters = role === "super_admin" || role === "administrator";
   const isSuperAdmin = role === "super_admin";
-  const usesGroupedNavigation = isSuperAdmin || role === "administrator";
+  const usesGroupedNavigation = isSuperAdmin || role === "administrator" || role === "operations_admin";
   const canSeeContentLinks = role === "super_admin" || role === "administrator" || role === "content_administrator";
   const canSeeSystemLinks = role === "super_admin" || role === "administrator";
 
@@ -35,10 +35,18 @@ export default function AdminNavbar({ role }: { role: string | null }) {
         ...(isSuperAdmin ? [{ href: "/admin/administrators", label: "Administrators" }] : []),
       ]
     : [];
+  const operationsFlatLinks = role === "operations_admin"
+    ? [
+        { href: "/admin/members", label: "Members" },
+        { href: "/admin/meetings", label: "Meetings" },
+        { href: "/admin/attendance", label: "Attendance" },
+        { href: "/admin/reports", label: "Reports" },
+      ]
+    : [];
   const flatLinks = role === "content_administrator"
     ? contentLinks
     : role === "operations_admin"
-      ? (canManagePayments ? [{ href: "/admin/payments", label: "Payments" }, { href: "/admin/payments/accounts", label: "Payment accounts" }] : [])
+      ? operationsFlatLinks
       : role === "treasurer"
         ? [{ href: "/admin/payments/accounts", label: "Payment accounts" }]
         : [];
