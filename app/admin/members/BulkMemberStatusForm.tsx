@@ -13,7 +13,7 @@ const statusOptions: MembershipStatus[] = ["pending", "active", "inactive", "rej
 
 type MemberWithOperationalStatus = Profile & { operationalSummary: OperationalSummary; completedMeetingCount: number };
 
-export default function BulkMemberStatusForm({ members, canManagePayments }: { members: MemberWithOperationalStatus[]; canManagePayments: boolean }) {
+export default function BulkMemberStatusForm({ members, canManagePayments, canResetPasswords }: { members: MemberWithOperationalStatus[]; canManagePayments: boolean; canResetPasswords: boolean }) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [status, setStatus] = useState<MembershipStatus>("active");
   const [isPending, startTransition] = useTransition();
@@ -155,7 +155,7 @@ export default function BulkMemberStatusForm({ members, canManagePayments }: { m
                   <p><b>Learning goals:</b> {member.learning_expectations || "-"}</p>
                   <p><b>Preferred placement:</b> {member.preferred_placement || "-"}</p>
                   <AchievementBadges attendedCount={member.operationalSummary.attendedCount} completedMeetingCount={member.completedMeetingCount} sex={member.sex} />
-                  <MemberDetailsForm member={member} />
+                  <MemberDetailsForm member={member} canResetPasswords={canResetPasswords} />
                 </div>
               </details>
             </article>
@@ -243,7 +243,7 @@ export default function BulkMemberStatusForm({ members, canManagePayments }: { m
                         completedMeetingCount={member.completedMeetingCount}
                         sex={member.sex}
                       />
-                      <MemberDetailsForm member={member} />
+                      <MemberDetailsForm member={member} canResetPasswords={canResetPasswords} />
                     </div>
                   </details>
                 </td>

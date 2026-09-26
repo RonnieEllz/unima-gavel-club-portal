@@ -2,10 +2,10 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient, createClient } from "@/lib/supabase/server";
 import type { MembershipStatus, PostType, AdminRoleName } from "@/types/database";
 import { getAuthContext, isSuperAdmin } from "@/lib/authz";
-import { canManageOperations, canManagePayments, canManageSemesters } from "@/lib/role-policy";
+import { canManageOperations, canManagePayments, canManageSemesters, canResetMemberPasswords } from "@/lib/role-policy";
 import { recordAuditEvent, type AuditData } from "@/lib/actions/audit";
 import {
   adminRoleSchema,
@@ -335,6 +335,49 @@ export async function bulkSetMemberPaymentStatus(memberIds: string[], paid: bool
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/profile");
   return { success: true, updated: changes?.length ?? 0 };
+}
+
+export async function resetMemberPassword(memberId: string, adminPassword: string, newPassword: string) {
+  const parsedMemberId = uuidSchema.safeParse(memberId);
+  const parsedAdminPassword = z.string().min(8, "Enter your current password to confirm this reset.").safeParse(adminPassword);
+  const parsedNewPassword = z.string().min(8, "Use at least 8 characters for the new member password.").safeParse(newPassword);
+  if (!parsedMemberId.success) return { error: "Invalid member." };
+  if (!parsedAdminPassword.success) return { error: parsedAdminPassword.error.issues[0]?.message ?? "Enter your current password." };
+  if (!parsedNewPassword.success) return { error: parsedNewPassword.error.issues[0]?.message ?? "Enter a valid new password." };
+
+  const supabase = createClient();
+  const adminSupabase = createAdminClient();
+  const auth = await getAuthContext();
+  if (!auth || !canResetMemberPasswords(auth.role as AdminRoleName)) {
+    return { error: "Only a Super Admin or Administrator can reset member passwords." };
+  }
+  if (!(await confirmCurrentPassword(supabase, auth, parsedAdminPassword.data))) {
+    return { error: "Your password confirmation failed. No member password was reset." };
+  }
+
+  const { data: member, error: memberError } = await supabase
+    .from("profiles")
+    .select("id, full_name")
+    .eq("id", parsedMemberId.data)
+    .maybeSingle();
+  if (memberError) return { error: memberError.message };
+  if (!member) return { error: "Member not found." };
+
+  const { error: resetError } = await adminSupabase.auth.admin.updateUserById(parsedMemberId.data, {
+    password: parsedNewPassword.data,
+  });
+  if (resetError) return { error: resetError.message };
+
+  await recordAuditEvent({
+    action: "member_password_reset",
+    entityType: "profile",
+    entityId: parsedMemberId.data,
+    beforeData: { member_id: member.id, full_name: member.full_name },
+    afterData: { reset_requested_via: "admin_action", status: "password_updated_directly" },
+  });
+
+  revalidatePath("/admin/members");
+  return { success: true, message: "The member password has been reset successfully." };
 }
 
 export async function setMembershipStatus(memberId: string, status: MembershipStatus) {

@@ -36,6 +36,10 @@ export function canManageSettings(role: AdminRoleName | null) {
   return role === "super_admin" || role === "administrator";
 }
 
+export function canResetMemberPasswords(role: AdminRoleName | null) {
+  return role === "super_admin" || role === "administrator";
+}
+
 export function canViewAudit(role: AdminRoleName | null) {
   return role === "super_admin" || role === "administrator";
 }

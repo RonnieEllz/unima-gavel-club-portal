@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { calculateOperationalSummary } from "@/lib/operational-status";
 import { getActiveSemester } from "@/lib/data";
 import { getCurrentUserProfile } from "@/lib/data";
-import { canManagePayments } from "@/lib/role-policy";
+import { canManagePayments, canResetMemberPasswords } from "@/lib/role-policy";
 import type { Profile } from "@/types/database";
 import BulkMemberStatusForm from "./BulkMemberStatusForm";
 
@@ -16,6 +16,7 @@ export default async function AdminMembersPage({
   const activeSemester = await getActiveSemester();
   const { adminRole } = await getCurrentUserProfile();
   const canEditPayments = canManagePayments(adminRole);
+  const canResetPasswords = canResetMemberPasswords(adminRole);
   let query = supabase.from("profiles").select("*", { count: "exact" }).order("created_at", { ascending: false });
   const searchTerm = searchParams.q?.trim().replace(/[(),.]/g, " ").slice(0, 100);
   const programFilter = searchParams.program?.trim().slice(0, 80);
@@ -130,7 +131,7 @@ export default async function AdminMembersPage({
       </form>
 
       {memberList.length > 0 ? (
-        <BulkMemberStatusForm members={operationalMembers} canManagePayments={canEditPayments} />
+        <BulkMemberStatusForm members={operationalMembers} canManagePayments={canEditPayments} canResetPasswords={canResetPasswords} />
       ) : (
         <div className="card mt-6 px-4 py-10 text-center text-gray-500">No members found.</div>
       )}
