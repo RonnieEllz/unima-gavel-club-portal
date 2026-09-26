@@ -16,6 +16,8 @@ export default async function AdminReportsPage({
 }: {
   searchParams: { from?: string; to?: string; program?: string; year?: string; q?: string };
 }) {
+  const { adminRole } = await getCurrentUserProfile();
+  const isSuperAdmin = adminRole === "super_admin";
   const from = validDate(searchParams.from);
   const to = validDate(searchParams.to);
   const program = searchParams.program?.trim().slice(0, 80) ?? "";
@@ -23,7 +25,6 @@ export default async function AdminReportsPage({
   const q = searchParams.q?.trim().slice(0, 100) ?? "";
   const invalidRange = Boolean(from && to && from > to);
   const supabase = createClient();
-  const { adminRole } = await getCurrentUserProfile();
   const activeSemester = await getActiveSemester();
   const noActiveSemesterMessage = !activeSemester
     ? "No active semester is configured. Create or activate a semester before running attendance reports."
@@ -98,7 +99,7 @@ export default async function AdminReportsPage({
         </div>
       </div>
 
-      {activeSemester && adminRole === "super_admin" && (
+      {isSuperAdmin && activeSemester && (
         <div className="mt-4 rounded-md border border-maroon-200 bg-maroon-50 px-4 py-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-maroon-700">Current club term</p>
           <p className="mt-1 text-sm font-semibold text-gray-800">{activeSemester.name}</p>

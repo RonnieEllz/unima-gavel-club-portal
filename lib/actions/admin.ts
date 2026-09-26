@@ -50,14 +50,20 @@ export async function createSemester(formData: FormData) {
   return { success: true };
 }
 
-export async function activateSemester(semesterId: string) {
+export async function activateSemester(semesterId: string, password: string) {
   const parsedId = uuidSchema.safeParse(semesterId);
+  const parsedPassword = z.string().min(8, "Enter your current password to activate this semester.").safeParse(password);
   if (!parsedId.success) return { error: "Invalid semester." };
+  if (!parsedPassword.success) return { error: parsedPassword.error.issues[0]?.message ?? "Invalid password." };
+
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "You must be logged in." };
   const { data: role } = await supabase.from("admin_roles").select("role").eq("user_id", user.id).maybeSingle();
   if (!role || !canManageSemesters(role.role as AdminRoleName)) return { error: "Only an administrator can manage semesters." };
+  if (!(await confirmCurrentPassword(supabase, { userId: user.id }, parsedPassword.data))) {
+    return { error: "Password confirmation failed. The semester was not activated." };
+  }
 
   const { data: previous } = await supabase.from("semesters").select("id, is_active").eq("is_active", true).maybeSingle();
   const { error: deactivateError } = await supabase.from("semesters").update({ is_active: false }).eq("is_active", true);

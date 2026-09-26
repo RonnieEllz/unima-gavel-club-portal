@@ -86,7 +86,27 @@ export default function SemesterManager({ semesters }: { semesters: Semester[] }
 
       {pendingActivate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/60 p-4" role="presentation">
-          <div className="card w-full max-w-md p-6" role="dialog" aria-modal="true" aria-labelledby="activate-semester-title">
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              const password = String(new FormData(event.currentTarget).get("password") ?? "");
+              startTransition(async () => {
+                setMessage(null);
+                setError(null);
+                const result = await activateSemester(pendingActivate.id, password);
+                if (result.error) setError(result.error);
+                else {
+                  setPendingActivate(null);
+                  setMessage(`${pendingActivate.name} is now the active club term.`);
+                  router.refresh();
+                }
+              });
+            }}
+            className="card w-full max-w-md p-6"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="activate-semester-title"
+          >
             <h2 id="activate-semester-title" className="font-display text-xl font-bold text-maroon-800">Activate semester</h2>
             <p className="mt-2 text-sm text-gray-600">
               This will make <span className="font-semibold">{pendingActivate.name}</span> the current club term for all live reports, dashboard data, and active-member tracking.
@@ -94,30 +114,14 @@ export default function SemesterManager({ semesters }: { semesters: Semester[] }
             <div className="mt-5 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
               Any reports and operational summaries shown to the club will switch to this semester until another term is activated.
             </div>
+            <label htmlFor="activate-semester-password" className="label-field mt-4">Your Password</label>
+            <input id="activate-semester-password" name="password" type="password" minLength={8} required autoFocus autoComplete="current-password" className="input-field" />
+            {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
             <div className="mt-5 flex justify-end gap-3">
               <button type="button" onClick={() => { setPendingActivate(null); setError(null); }} className="btn-secondary !px-4 !py-2 text-sm">Cancel</button>
-              <button
-                type="button"
-                disabled={isPending}
-                onClick={() => {
-                  startTransition(async () => {
-                    setMessage(null);
-                    setError(null);
-                    const result = await activateSemester(pendingActivate.id);
-                    if (result.error) setError(result.error);
-                    else {
-                      setPendingActivate(null);
-                      setMessage(`${pendingActivate.name} is now the active club term.`);
-                      router.refresh();
-                    }
-                  });
-                }}
-                className="btn-primary !px-4 !py-2 text-sm"
-              >
-                {isPending ? "Activating..." : "Confirm activation"}
-              </button>
+              <button disabled={isPending} className="btn-primary !px-4 !py-2 text-sm">{isPending ? "Activating..." : "Confirm activation"}</button>
             </div>
-          </div>
+          </form>
         </div>
       )}
 

@@ -44,7 +44,8 @@ export default async function DashboardPage() {
   const nextMeeting = upcomingMeetings[0] ?? null;
   const nextMeetingAlreadyCheckedIn = nextMeeting ? checkedInMeetingIds.has(nextMeeting.id) : false;
   const isNewMember = profile?.membership_status === "pending";
-  const showWhatsAppCallout = !!whatsappGroupLink && isNewMember;
+  const hasThreeMeetings = presentCount >= 3;
+  const showWhatsAppCallout = !!whatsappGroupLink && isNewMember && hasThreeMeetings;
   const paymentMethods = [
     {
       label: "Bank (NB)",
@@ -143,8 +144,8 @@ export default async function DashboardPage() {
 
         {showWhatsAppCallout && whatsappGroupLink && (
           <div className="card flex flex-col gap-3 p-5">
-            <h3 className="font-semibold text-maroon-800">Welcome new member</h3>
-            <p className="text-sm text-gray-600">Join the WhatsApp group to stay connected with the club, hear updates, and get support as you begin your journey with UNIMA Gavel Club.</p>
+            <h3 className="font-semibold text-maroon-800">You are eligible to join</h3>
+            <p className="text-sm text-gray-600">You have attended 3 club meetings this semester. Join the member WhatsApp group to stay connected, hear updates, and keep up with the club community.</p>
             <a href={whatsappGroupLink} target="_blank" rel="noreferrer noopener" className="inline-flex w-fit items-center rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700">
               Join WhatsApp group
             </a>

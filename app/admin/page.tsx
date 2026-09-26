@@ -19,6 +19,7 @@ export default async function AdminOverviewPage() {
   const { adminRole } = await getCurrentUserProfile();
   if (adminRole === "treasurer") redirect("/admin/payments");
   const isOperationsAdmin = adminRole === "operations_admin";
+  const isSuperAdmin = adminRole === "super_admin";
   const canManageSemesters = adminRole === "super_admin" || adminRole === "administrator";
   const activeSemester = await getActiveSemester();
   const supabase = createClient();
@@ -116,7 +117,7 @@ export default async function AdminOverviewPage() {
           <Link href="/api/export/members" className="btn-secondary !px-4 !py-2 text-sm">Export members</Link>
         </div>
 
-        {adminRole === "super_admin" && activeSemester && (
+        {isSuperAdmin && activeSemester && (
           <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">Current club term</p>
             <p className="mt-1 text-sm font-semibold text-gray-800">{activeSemester.name}</p>
@@ -268,7 +269,7 @@ export default async function AdminOverviewPage() {
     <div>
       <h1 className="font-display text-3xl font-bold text-maroon-800">Admin Dashboard</h1>
 
-      {activeSemester && (
+      {isSuperAdmin && activeSemester && (
         <div className="mt-4 rounded-md border border-maroon-200 bg-maroon-50 px-4 py-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-maroon-700">Current club term</p>
           <p className="mt-1 text-sm font-semibold text-gray-800">{activeSemester.name}</p>
