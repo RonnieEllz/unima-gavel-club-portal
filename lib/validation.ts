@@ -13,9 +13,22 @@ export function isSafeImageUrl(value: string | null | undefined): value is strin
 
 export const uuidSchema = z.string().uuid("Invalid identifier.");
 
+const todayAtStartOfDay = () => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today;
+};
+
+const isOnOrAfterToday = (dateString: string) => {
+  const parsed = new Date(`${dateString}T00:00:00Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed >= todayAtStartOfDay();
+};
+
 export const meetingSchema = z.object({
   title: z.string().trim().min(2).max(160),
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Enter a valid meeting date."),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Enter a valid meeting date.").refine(isOnOrAfterToday, {
+    message: "Meeting date cannot be in the past.",
+  }),
   time: z.string().regex(/^\d{2}:\d{2}$/, "Enter a valid meeting time."),
   venue: z.string().trim().min(2).max(160),
   description: z.string().trim().max(5000),
@@ -139,5 +152,11 @@ export const semesterSchema = z.object({
   ends_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Enter a valid end date."),
 }).refine((value) => value.ends_on >= value.starts_on, {
   message: "The end date must be on or after the start date.",
+  path: ["ends_on"],
+}).refine((value) => isOnOrAfterToday(value.starts_on), {
+  message: "Semester start date cannot be in the past.",
+  path: ["starts_on"],
+}).refine((value) => isOnOrAfterToday(value.ends_on), {
+  message: "Semester end date cannot be in the past.",
   path: ["ends_on"],
 });

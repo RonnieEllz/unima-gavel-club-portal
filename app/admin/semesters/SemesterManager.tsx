@@ -14,6 +14,13 @@ export default function SemesterManager({ semesters }: { semesters: Semester[] }
   const router = useRouter();
   const activeSemester = semesters.find((semester) => semester.is_active) ?? null;
 
+  const overlappingSemesterNames = semesters
+    .flatMap((semester) => semesters
+      .filter((other) => other.id !== semester.id && semester.starts_on <= other.ends_on && semester.ends_on >= other.starts_on)
+      .map((other) => [semester.name, other.name] as const))
+    .filter((names, index, list) => list.findIndex(([first, second]) => (first === names[0] && second === names[1]) || (first === names[1] && second === names[0])) === index)
+    .map(([first, second]) => `${first} and ${second}`);
+
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
@@ -22,7 +29,11 @@ export default function SemesterManager({ semesters }: { semesters: Semester[] }
       setError(null);
       const result = await createSemester(new FormData(form));
       if (result.error) setError(result.error);
-      else { setMessage("Semester created."); form.reset(); router.refresh(); }
+      else {
+        setMessage(result.warning ?? "Semester created.");
+        form.reset();
+        router.refresh();
+      }
     });
   }
 
@@ -50,6 +61,13 @@ export default function SemesterManager({ semesters }: { semesters: Semester[] }
             </span>
           )}
         </div>
+
+        {overlappingSemesterNames.length > 0 && (
+          <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+            <p className="font-semibold">Overlapping semester dates detected.</p>
+            <p className="mt-1">{overlappingSemesterNames.join("; ")}. The active semester still controls live meeting assignment until the dates are corrected.</p>
+          </div>
+        )}
 
         {activeSemester && (
           <div className="mt-4 rounded-md border border-green-200 bg-green-50 p-3">

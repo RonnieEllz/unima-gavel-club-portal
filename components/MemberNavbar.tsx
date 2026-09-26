@@ -14,7 +14,7 @@ const links = [
   { href: "/stories", label: "Stories" },
 ];
 
-export default function MemberNavbar({ isAdmin }: { isAdmin: boolean }) {
+export default function MemberNavbar({ isAdmin, unreadCount }: { isAdmin: boolean; unreadCount: number }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   function closeMenu() {
@@ -24,9 +24,16 @@ export default function MemberNavbar({ isAdmin }: { isAdmin: boolean }) {
   return (
     <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/95 shadow-sm backdrop-blur">
       <nav className="container-page relative flex min-h-16 items-center justify-between gap-3 py-3">
-        <Link href="/dashboard" onClick={closeMenu} className="font-display text-lg font-bold text-maroon-800">
-          UNIMA Gavel Club
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link href="/dashboard" onClick={closeMenu} className="font-display text-lg font-bold text-maroon-800">
+            UNIMA Gavel Club
+          </Link>
+          {unreadCount > 0 && (
+            <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-maroon-600 px-2 py-0.5 text-[10px] font-bold text-white">
+              {unreadCount}
+            </span>
+          )}
+        </div>
         <button
           type="button"
           aria-label={menuOpen ? "Close member navigation menu" : "Open member navigation menu"}

@@ -7,6 +7,7 @@ import type { MembershipStatus, PostType, AdminRoleName } from "@/types/database
 import { getAuthContext, isSuperAdmin } from "@/lib/authz";
 import { canManageOperations, canManagePayments, canManageSemesters, canResetMemberPasswords } from "@/lib/role-policy";
 import { recordAuditEvent, type AuditData } from "@/lib/actions/audit";
+import { buildNotificationMessage } from "@/lib/notifications";
 import {
   adminRoleSchema,
   aboutPageSettingsSchema,
@@ -26,6 +27,43 @@ import {
 // lacks the right role, Supabase returns an error and nothing is written.
 // these actions do not themselves decide who is allowed to do what.
 
+// Notification system disabled for now. TODO: implement a proper member-facing
+// notification pipeline with explicit roles, privacy rules, and delivery policy.
+async function notifyMembersOfClubUpdate(
+  supabase: ReturnType<typeof createClient>,
+  kind: "meeting" | "update" | "story",
+  title: string,
+  relatedId: string
+) {
+  void supabase;
+  void kind;
+  void title;
+  void relatedId;
+  return;
+}
+
+export async function markNotificationAsRead(notificationId: string) {
+  void notificationId;
+  revalidatePath("/dashboard");
+  return { success: true, disabled: true };
+}
+
+export async function markAllNotificationsAsRead() {
+  revalidatePath("/dashboard");
+  return { success: true, disabled: true };
+}
+
+export async function clearNotification(notificationId: string) {
+  void notificationId;
+  revalidatePath("/dashboard");
+  return { success: true, disabled: true };
+}
+
+export async function clearAllNotifications() {
+  revalidatePath("/dashboard");
+  return { success: true, disabled: true };
+}
+
 // ---------------------------------------------------------------------------
 // MEMBERS
 // ---------------------------------------------------------------------------
@@ -37,16 +75,43 @@ export async function createSemester(formData: FormData) {
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid semester." };
 
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  if (new Date(`${parsed.data.starts_on}T00:00:00Z`) < todayStart || new Date(`${parsed.data.ends_on}T00:00:00Z`) < todayStart) {
+    return { error: "Semester dates cannot be in the past." };
+  }
+
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "You must be logged in." };
   const { data: role } = await supabase.from("admin_roles").select("role").eq("user_id", user.id).maybeSingle();
   if (!role || !canManageSemesters(role.role as AdminRoleName)) return { error: "Only an administrator can manage semesters." };
 
+  const { data: existingSemesters } = await supabase
+    .from("semesters")
+    .select("id, name, starts_on, ends_on")
+    .order("starts_on", { ascending: true });
+
+  const overlaps = (existingSemesters ?? []).filter((semester) => {
+    const startsOn = new Date(parsed.data.starts_on).getTime();
+    const endsOn = new Date(parsed.data.ends_on).getTime();
+    const existingStarts = new Date(semester.starts_on).getTime();
+    const existingEnds = new Date(semester.ends_on).getTime();
+    return startsOn <= existingEnds && endsOn >= existingStarts;
+  });
+
   const { data: semester, error } = await supabase.from("semesters").insert({ ...parsed.data, is_active: false }).select("id").single();
   if (error) return { error: error.message };
   await recordAuditEvent({ action: "semester_created", entityType: "semester", entityId: semester.id, afterData: parsed.data });
   revalidatePath("/admin/semesters");
+
+  if (overlaps.length > 0) {
+    return {
+      success: true,
+      warning: `Semester created. Warning: this range overlaps with ${overlaps.map((semester) => semester.name).join(", ")}. The active semester still controls live meeting assignment.`,
+    };
+  }
+
   return { success: true };
 }
 
@@ -470,14 +535,33 @@ export type MeetingFormState = { error?: string; success?: boolean };
 
 async function findMeetingSemester(date: string) {
   const supabase = createClient();
-  const { data, error } = await supabase
+
+  const { data: activeSemester, error: activeSemesterError } = await supabase
     .from("semesters")
     .select("id")
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (activeSemesterError) {
+    return { error: `Unable to load the active semester: ${activeSemesterError.message}` };
+  }
+
+  if (activeSemester) {
+    return { semesterId: activeSemester.id };
+  }
+
+  const { data, error } = await supabase
+    .from("semesters")
+    .select("id, starts_on, ends_on")
     .lte("starts_on", date)
-    .gte("ends_on", date);
+    .gte("ends_on", date)
+    .order("starts_on", { ascending: false });
+
   if (error) return { error: `Unable to find a semester for this meeting: ${error.message}` };
   if (!data || data.length === 0) return { error: "Create or activate a semester that includes this meeting date first." };
-  if (data.length > 1) return { error: "This meeting date falls into overlapping semesters. Fix the semester dates first." };
+
+  // If semester ranges overlap, the active term wins. When no active term exists,
+  // prefer the most recently started semester because it is the closest live term.
   return { semesterId: data[0].id };
 }
 
@@ -494,6 +578,12 @@ export async function createMeeting(
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid meeting details." };
 
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  if (new Date(`${parsed.data.date}T00:00:00Z`) < todayStart) {
+    return { error: "Meeting date cannot be in the past." };
+  }
+
   const semester = await findMeetingSemester(parsed.data.date);
   if (semester.error) return { error: semester.error };
 
@@ -509,6 +599,7 @@ export async function createMeeting(
   }).select("id").single();
 
   if (error) return { error: error.message };
+  await notifyMembersOfClubUpdate(supabase, "meeting", parsed.data.title, meeting.id);
   await recordAuditEvent({
     action: "meeting_created",
     entityType: "meeting",
@@ -535,6 +626,12 @@ export async function updateMeeting(
     description: String(formData.get("description") ?? ""),
   });
   if (!parsedMeetingId.success || !parsed.success) return { error: "Invalid meeting details." };
+
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  if (new Date(`${parsed.data.date}T00:00:00Z`) < todayStart) {
+    return { error: "Meeting date cannot be in the past." };
+  }
 
   const semester = await findMeetingSemester(parsed.data.date);
   if (semester.error) return { error: semester.error };
@@ -652,6 +749,9 @@ export async function createPost(
   }).select("id").single();
 
   if (error) return { error: error.message };
+  if (formData.get("published") === "on") {
+    await notifyMembersOfClubUpdate(supabase, parsedType.data, parsed.data.title, post.id);
+  }
   await recordAuditEvent({
     action: "post_created",
     entityType: "post",
@@ -727,6 +827,12 @@ export async function togglePublished(postId: string, published: boolean, postTy
 
   const { error } = await supabase.from("posts").update({ published }).eq("id", parsedPostId.data);
   if (error) return { error: error.message };
+  if (published) {
+    const { data: post } = await supabase.from("posts").select("title").eq("id", parsedPostId.data).maybeSingle();
+    if (post) {
+      await notifyMembersOfClubUpdate(supabase, postType, post.title, parsedPostId.data);
+    }
+  }
   await recordAuditEvent({
     action: published ? "post_published" : "post_unpublished",
     entityType: "post",

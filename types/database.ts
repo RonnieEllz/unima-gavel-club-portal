@@ -83,6 +83,17 @@ export interface Post {
   updated_at: string;
 }
 
+export interface Notification {
+  id: string;
+  recipient_id: string;
+  actor_id: string | null;
+  related_type: "meeting" | "update" | "story";
+  related_id: string | null;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+}
+
 export interface GalleryImage {
   id: string;
   image_url: string;
@@ -194,6 +205,7 @@ export interface Database {
         ];
       };
       posts: { Row: Post; Insert: Partial<Post>; Update: Partial<Post>; Relationships: [] };
+      notifications: { Row: Notification; Insert: Partial<Notification>; Update: Partial<Notification>; Relationships: [] };
       gallery: { Row: GalleryImage; Insert: Partial<GalleryImage>; Update: Partial<GalleryImage>; Relationships: [] };
       site_settings: { Row: SiteSetting; Insert: Partial<SiteSetting>; Update: Partial<SiteSetting>; Relationships: [] };
       landing_page_settings: { Row: LandingPageSettings; Insert: Partial<LandingPageSettings>; Update: Partial<LandingPageSettings>; Relationships: [] };

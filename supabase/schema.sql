@@ -195,6 +195,24 @@
   create index if not exists posts_type_idx on posts(post_type, published, created_at desc);
 
   -- ---------------------------------------------------------------------------
+  -- NOTIFICATIONS
+  -- In-app announcements for club updates, stories, and meetings.
+  -- ---------------------------------------------------------------------------
+  create table if not exists notifications (
+    id uuid primary key default uuid_generate_v4(),
+    recipient_id uuid not null references profiles(id) on delete cascade,
+    actor_id uuid references auth.users(id) on delete set null,
+    related_type text not null check (related_type in ('meeting', 'update', 'story')),
+    related_id uuid,
+    message text not null check (length(trim(message)) > 0),
+    is_read boolean not null default false,
+    created_at timestamptz not null default now()
+  );
+
+  create index if not exists notifications_recipient_idx on notifications(recipient_id, created_at desc);
+  create index if not exists notifications_unread_idx on notifications(recipient_id, is_read, created_at desc);
+
+  -- ---------------------------------------------------------------------------
   -- GALLERY
   -- ---------------------------------------------------------------------------
   create table if not exists gallery (

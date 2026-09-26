@@ -9,6 +9,7 @@ alter table admin_roles enable row level security;
 alter table meetings enable row level security;
 alter table attendance enable row level security;
 alter table posts enable row level security;
+alter table notifications enable row level security;
 alter table gallery enable row level security;
 alter table site_settings enable row level security;
 alter table landing_page_settings enable row level security;
@@ -42,6 +43,10 @@ drop policy if exists "posts_insert_content_admin" on posts;
 drop policy if exists "posts_update_content_admin" on posts;
 drop policy if exists "posts_delete_content_admin" on posts;
 drop policy if exists "posts_select_published_anon" on posts;
+drop policy if exists "notifications_select_own" on notifications;
+drop policy if exists "notifications_select_admin" on notifications;
+drop policy if exists "notifications_insert_admin" on notifications;
+drop policy if exists "notifications_update_own" on notifications;
 drop policy if exists "gallery_select_authenticated" on gallery;
 drop policy if exists "gallery_select_anon" on gallery;
 drop policy if exists "gallery_insert_content_admin" on gallery;
@@ -52,6 +57,7 @@ drop policy if exists "site_settings_insert_admin" on site_settings;
 drop policy if exists "site_settings_update_admin" on site_settings;
 drop policy if exists "site_settings_delete_admin" on site_settings;
 drop policy if exists "site_settings_select_public_announcement" on site_settings;
+drop policy if exists "site_settings_select_public_whatsapp_group_link" on site_settings;
 drop policy if exists "landing_page_settings_select_public" on landing_page_settings;
 drop policy if exists "landing_page_settings_select_admin" on landing_page_settings;
 drop policy if exists "landing_page_settings_insert_admin" on landing_page_settings;
@@ -319,6 +325,23 @@ create policy "posts_select_published_anon"
   on posts for select
   to anon
   using (published = true);
+
+create policy "notifications_select_own"
+  on notifications for select
+  using (auth.uid() = recipient_id);
+
+create policy "notifications_select_admin"
+  on notifications for select
+  using (can_manage_operations() or has_content_access());
+
+create policy "notifications_insert_admin"
+  on notifications for insert
+  with check (can_manage_operations() or has_content_access());
+
+create policy "notifications_update_own"
+  on notifications for update
+  using (auth.uid() = recipient_id)
+  with check (auth.uid() = recipient_id);
 
 -- ---------------------------------------------------------------------------
 -- GALLERY

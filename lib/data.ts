@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import type { Meeting, Post, GalleryImage, Semester, LandingPageSettings, CustomSection } from "@/types/database";
+import type { Meeting, Post, Notification, GalleryImage, Semester, LandingPageSettings, CustomSection } from "@/types/database";
 
 export const defaultLandingPageSettings: Omit<LandingPageSettings, "id" | "updated_by" | "updated_at"> = {
   hero_eyebrow: "University of Malawi",
@@ -98,6 +98,17 @@ export async function getLatestPosts(type: "story" | "update", limit = 3): Promi
     .order("created_at", { ascending: false })
     .limit(limit);
   return (data as Post[]) ?? [];
+}
+
+// Notification system disabled for now. TODO: rebuild this as a proper in-app
+// feed with explicit privacy rules, user visibility controls, and admin tooling.
+export async function getMemberNotifications(limit = 5): Promise<Notification[]> {
+  void limit;
+  return [];
+}
+
+export async function getUnreadNotificationCount(): Promise<number> {
+  return 0;
 }
 
 export async function getGalleryPreview(limit = 8): Promise<GalleryImage[]> {
