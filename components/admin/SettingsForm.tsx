@@ -48,7 +48,7 @@ export default function SettingsForm({
       try {
         const result = deleteActionToRun ? await deleteActionToRun(password) : await action(formData as FormData);
         setMessage(result.error ? result : { success: true });
-        if (!result.error && deleteActionToRun) router.refresh();
+        if (!result.error) router.refresh();
       } catch (error) {
         setMessage({ error: error instanceof Error ? error.message : "Could not save settings." });
       }
