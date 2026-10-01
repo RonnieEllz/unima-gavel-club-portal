@@ -3,6 +3,7 @@ import { createCustomSection, deleteCustomSection, updateAboutPageSettings, upda
 import { normalizeAnnouncementInput } from "@/lib/announcement";
 import { defaultLandingPageSettings } from "@/lib/data";
 import ImageUploadField from "@/components/admin/ImageUploadField";
+import HeroOverlayOpacityField from "@/components/admin/HeroOverlayOpacityField";
 import SettingsForm from "@/components/admin/SettingsForm";
 
 export default async function AdminSettingsPage() {
@@ -77,6 +78,7 @@ export default async function AdminSettingsPage() {
           <input name="hero_title" defaultValue={values.hero_title} placeholder="Title" className="input-field" required />
           <textarea name="hero_description" defaultValue={values.hero_description} placeholder="Description" className="input-field" rows={3} required />
           <ImageUploadField name="hero_image" label="Hero image" currentUrl={values.hero_image ?? ""} />
+          <HeroOverlayOpacityField value={values.hero_overlay_opacity} />
         </fieldset>
 
         <fieldset className="grid gap-4">

@@ -242,6 +242,7 @@
     hero_title text not null default 'UNIMA Gavel Club',
     hero_description text not null default 'A student community focused on developing communication, public speaking, leadership and confidence.',
     hero_image text,
+    hero_overlay_opacity integer not null default 100 check (hero_overlay_opacity between 0 and 100),
     primary_cta_label text not null default 'Join the Club',
     primary_cta_url text not null default '/join',
     secondary_cta_label text not null default 'Member Login',

@@ -118,6 +118,7 @@ export interface LandingPageSettings {
   hero_title: string;
   hero_description: string;
   hero_image: string | null;
+  hero_overlay_opacity: number;
   primary_cta_label: string;
   primary_cta_url: string;
   secondary_cta_label: string;

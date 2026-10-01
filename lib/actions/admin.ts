@@ -1249,7 +1249,7 @@ export async function updateLandingPageSettings(formData: FormData) {
     formData,
     landingPageContentSchema,
     [
-      "hero_eyebrow", "hero_title", "hero_description", "hero_image",
+      "hero_eyebrow", "hero_title", "hero_description", "hero_image", "hero_overlay_opacity",
       "intro_heading", "intro_content", "intro_image", "intro_image_alt",
       "show_announcement", "show_intro", "show_meeting", "show_stories", "show_updates", "show_gallery", "gallery_drive_url",
       "seo_title", "seo_description", "social_image",

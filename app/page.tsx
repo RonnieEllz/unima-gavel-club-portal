@@ -34,7 +34,10 @@ export default async function LandingPage() {
             priority
             className="object-cover opacity-25"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-maroon-900/60 via-maroon-800/70 to-maroon-800" />
+          <div
+            className="absolute inset-0 bg-gradient-to-b from-maroon-900/60 via-maroon-800/70 to-maroon-800"
+            style={{ opacity: settings.hero_overlay_opacity / 100 }}
+          />
         </div>
         <div className="container-page relative py-24 text-center sm:py-32">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-gold-400">

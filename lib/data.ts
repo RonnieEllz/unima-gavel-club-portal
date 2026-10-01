@@ -6,6 +6,7 @@ export const defaultLandingPageSettings: Omit<LandingPageSettings, "id" | "updat
   hero_title: "UNIMA Gavel Club",
   hero_description: "A student community focused on developing communication, public speaking, leadership and confidence.",
   hero_image: null,
+  hero_overlay_opacity: 100,
   primary_cta_label: "Join the Club",
   primary_cta_url: "/join",
   secondary_cta_label: "Member Login",
