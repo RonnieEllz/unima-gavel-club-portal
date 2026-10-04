@@ -529,6 +529,29 @@ body {
   font-size: 0;
 }
 
+.achievement-figure-hero .achievement-eyes {
+  left: 6px;
+  top: 4px;
+}
+
+.achievement-figure-hero .achievement-eyes::after {
+  left: 17px;
+  top: 0;
+}
+
+.achievement-figure-hero .achievement-mouth {
+  left: 8px;
+  top: 13px;
+  display: block;
+  width: 18px;
+  height: 9px;
+  border: 3px solid currentColor;
+  border-top: 0;
+  border-radius: 0 0 999px 999px;
+  font-size: 0;
+  background: transparent;
+}
+
 .achievement-figure-hero .achievement-arm-left,
 .achievement-figure-hero .achievement-arm-right,
 .achievement-figure-commit .achievement-arm-left,
@@ -544,6 +567,18 @@ body {
 
 .achievement-figure-hero {
   background: linear-gradient(145deg, #fda4af 0%, #fb7185 62%, #be123c 100%);
+}
+
+.achievement-figure-hero.achievement-figure-male {
+  border-color: #166534;
+  background: linear-gradient(145deg, #bbf7d0 0%, #4ade80 62%, #15803d 100%);
+  color: #14532d;
+}
+
+.achievement-figure-hero.achievement-figure-female {
+  border-color: #7e22ce;
+  background: linear-gradient(145deg, #e9d5ff 0%, #c084fc 62%, #7e22ce 100%);
+  color: #581c87;
 }
 
 .achievement-figure-commit {
