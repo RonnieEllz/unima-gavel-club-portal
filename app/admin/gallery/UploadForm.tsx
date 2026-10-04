@@ -12,6 +12,7 @@ export default function UploadForm({ fixedCategory, captionLabel = "Caption" }: 
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const captionRef = useRef<HTMLInputElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
   const categoryRef = useRef<HTMLInputElement>(null);
   const featuredRef = useRef<HTMLInputElement>(null);
   const featuredOrderRef = useRef<HTMLInputElement>(null);
@@ -55,12 +56,14 @@ export default function UploadForm({ fixedCategory, captionLabel = "Caption" }: 
         captionRef.current?.value ?? "",
         categoryRef.current?.value ?? "",
         featuredRef.current?.checked ?? false,
-        Number(featuredOrderRef.current?.value ?? 0)
+        Number(featuredOrderRef.current?.value ?? 0),
+        nameRef.current?.value ?? ""
       );
       if (result?.error) throw new Error(result.error);
 
       if (fileRef.current) fileRef.current.value = "";
       if (captionRef.current) captionRef.current.value = "";
+      if (nameRef.current) nameRef.current.value = "";
       if (categoryRef.current) categoryRef.current.value = fixedCategory ?? "";
       if (featuredRef.current) featuredRef.current.checked = false;
       if (featuredOrderRef.current) featuredOrderRef.current.value = "0";
@@ -86,6 +89,12 @@ export default function UploadForm({ fixedCategory, captionLabel = "Caption" }: 
         <label className="label-field">{captionLabel}</label>
         <input ref={captionRef} className="input-field" />
       </div>
+      {fixedCategory === "executive" && (
+        <div>
+          <label className="label-field" htmlFor="executive_member_name">Name</label>
+          <input ref={nameRef} id="executive_member_name" maxLength={200} className="input-field" />
+        </div>
+      )}
       {fixedCategory ? (
         <input ref={categoryRef} type="hidden" defaultValue={fixedCategory} />
       ) : (

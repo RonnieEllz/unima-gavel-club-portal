@@ -879,11 +879,13 @@ export async function addGalleryImage(
   caption: string,
   category: string,
   isFeatured = false,
-  featuredOrder = 0
+  featuredOrder = 0,
+  name = ""
 ) {
   const parsedUrl = z.string().url().safeParse(imageUrl);
   const parsedOrder = z.coerce.number().int().min(0).max(10000).safeParse(featuredOrder);
-  if (!parsedUrl.success || !parsedOrder.success || caption.length > 500 || category.length > 100) {
+  const parsedName = z.string().max(200).safeParse(name);
+  if (!parsedUrl.success || !parsedOrder.success || !parsedName.success || caption.length > 500 || category.length > 100) {
     return { error: "Invalid gallery details." };
   }
 
@@ -895,6 +897,7 @@ export async function addGalleryImage(
   const { data: image, error } = await supabase.from("gallery").insert({
     image_url: parsedUrl.data,
     caption,
+    name: parsedName.data.trim() || null,
     category,
     is_featured: isFeatured,
     featured_order: isFeatured ? parsedOrder.data : 0,
@@ -906,7 +909,7 @@ export async function addGalleryImage(
     action: "gallery_image_added",
     entityType: "gallery",
     entityId: image.id,
-    afterData: { image_url: parsedUrl.data, caption, category, is_featured: isFeatured, featured_order: isFeatured ? parsedOrder.data : 0 },
+    afterData: { image_url: parsedUrl.data, caption, name: parsedName.data.trim() || null, category, is_featured: isFeatured, featured_order: isFeatured ? parsedOrder.data : 0 },
   });
 
   revalidatePath("/admin/gallery");
@@ -920,13 +923,15 @@ export async function updateGalleryImage(
   caption: string,
   category: string,
   isFeatured = false,
-  featuredOrder = 0
+  featuredOrder = 0,
+  name = ""
 ) {
   const parsedId = uuidSchema.safeParse(id);
   const parsedCaption = z.string().max(500).safeParse(caption);
   const parsedCategory = z.string().max(100).safeParse(category);
   const parsedOrder = z.coerce.number().int().min(0).max(10000).safeParse(featuredOrder);
-  if (!parsedId.success || !parsedCaption.success || !parsedCategory.success || !parsedOrder.success) {
+  const parsedName = z.string().max(200).safeParse(name);
+  if (!parsedId.success || !parsedCaption.success || !parsedCategory.success || !parsedOrder.success || !parsedName.success) {
     return { error: "Invalid gallery details." };
   }
 
@@ -936,6 +941,7 @@ export async function updateGalleryImage(
 
   const update = {
     caption: parsedCaption.data.trim() || null,
+    name: parsedName.data.trim() || null,
     category: parsedCategory.data.trim() || null,
     is_featured: isFeatured,
     featured_order: isFeatured ? parsedOrder.data : 0,

@@ -219,6 +219,7 @@
     id uuid primary key default uuid_generate_v4(),
     image_url text not null,
     caption text,
+    name text,
     category text,
     is_featured boolean not null default false,
     featured_order integer not null default 0 check (featured_order >= 0),

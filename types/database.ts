@@ -98,6 +98,7 @@ export interface GalleryImage {
   id: string;
   image_url: string;
   caption: string | null;
+  name: string | null;
   category: string | null;
   is_featured: boolean;
   featured_order: number;

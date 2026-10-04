@@ -43,9 +43,11 @@ export default async function ExecutiveGalleryPage() {
             </div>
             <div className="p-2">
               {img.caption && <p className="truncate text-xs text-gray-600">{img.caption}</p>}
+              {img.name && <p className="truncate text-xs font-semibold text-maroon-800">{img.name}</p>}
               <GalleryItemActions
                 id={img.id}
                 caption={img.caption}
+                name={img.name}
                 category={img.category}
                 isFeatured={img.is_featured}
                 featuredOrder={img.featured_order}

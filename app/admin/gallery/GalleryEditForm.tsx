@@ -6,6 +6,7 @@ import { updateGalleryImage } from "@/lib/actions/admin";
 export default function GalleryEditForm({
   id,
   caption,
+  name,
   category,
   isFeatured,
   featuredOrder,
@@ -14,6 +15,7 @@ export default function GalleryEditForm({
 }: {
   id: string;
   caption: string | null;
+  name?: string | null;
   category: string | null;
   isFeatured: boolean;
   featuredOrder: number;
@@ -41,7 +43,8 @@ export default function GalleryEditForm({
             String(form.get("caption") ?? ""),
             String(form.get("category") ?? ""),
             form.get("is_featured") === "on",
-            Number(form.get("featured_order") ?? 0)
+            Number(form.get("featured_order") ?? 0),
+            String(form.get("name") ?? "")
           );
             if (result.error) setError(result.error);
             else {
@@ -53,6 +56,12 @@ export default function GalleryEditForm({
       >
         <label className="label-field">{captionLabel}</label>
         <input name="caption" defaultValue={caption ?? ""} maxLength={500} className="input-field" aria-label={captionLabel} placeholder={captionLabel} />
+        {lockCategory && (
+          <>
+            <label className="label-field" htmlFor={`gallery_name_${id}`}>Name</label>
+            <input id={`gallery_name_${id}`} name="name" defaultValue={name ?? ""} maxLength={200} className="input-field" aria-label="Name" placeholder="Name" />
+          </>
+        )}
         {lockCategory ? (
           <input name="category" type="hidden" value="executive" readOnly />
         ) : (

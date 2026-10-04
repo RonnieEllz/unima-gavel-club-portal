@@ -8,6 +8,7 @@ import GalleryEditForm from "./GalleryEditForm";
 export default function GalleryItemActions({
   id,
   caption,
+  name,
   category,
   isFeatured,
   featuredOrder,
@@ -16,6 +17,7 @@ export default function GalleryItemActions({
 }: {
   id: string;
   caption: string | null;
+  name?: string | null;
   category: string | null;
   isFeatured: boolean;
   featuredOrder: number;
@@ -69,7 +71,7 @@ export default function GalleryItemActions({
           </div>
         </div>
       )}
-      <GalleryEditForm id={id} caption={caption} category={category} isFeatured={isFeatured} featuredOrder={featuredOrder} lockCategory={lockCategory} captionLabel={captionLabel} />
+      <GalleryEditForm id={id} caption={caption} name={name} category={category} isFeatured={isFeatured} featuredOrder={featuredOrder} lockCategory={lockCategory} captionLabel={captionLabel} />
     </>
   );
 }

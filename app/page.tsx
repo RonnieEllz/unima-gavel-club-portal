@@ -227,9 +227,10 @@ export default async function LandingPage() {
             {executiveMembers.map((member) => (
               <div key={member.id} className="text-center">
                 <div className="mx-auto aspect-square w-32 overflow-hidden rounded-full border-4 border-white bg-maroon-100 shadow-md sm:w-36">
-                  <Image src={member.image_url} alt={member.caption ?? "Executive member"} width={144} height={144} className="h-full w-full object-cover" />
+                  <Image src={member.image_url} alt={member.name ?? member.caption ?? "Executive member"} width={144} height={144} className="h-full w-full object-cover" />
                 </div>
                 {member.caption && <p className="mt-3 text-sm font-semibold text-maroon-800">{member.caption}</p>}
+                {member.name && <p className="mt-1 text-sm text-gray-700">{member.name}</p>}
               </div>
             ))}
           </div>
