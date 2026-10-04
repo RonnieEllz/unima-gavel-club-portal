@@ -55,7 +55,7 @@ export default function JoinPage() {
           </p>
 
           {state.error && (
-            <p className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{state.error}</p>
+            <p role="alert" className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{state.error}</p>
           )}
 
           <form action={formAction} className="mt-8 space-y-6">

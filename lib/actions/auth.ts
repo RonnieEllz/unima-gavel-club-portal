@@ -13,7 +13,7 @@ const registerSchema = z.object({
   holiday_residence: z.string().optional(),
   learning_expectations: z.string().optional(),
   preferred_placement: z.string().optional(),
-  email: z.string().email("Please enter a valid email address"),
+  email: z.string().trim().email("Please enter a valid email address").transform((email) => email.toLowerCase()),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
@@ -43,7 +43,7 @@ export async function registerMember(
 
   // Supabase Auth hashes and stores the password securely. The app never
   // sees or stores a plaintext or custom-hashed password itself.
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -52,7 +52,21 @@ export async function registerMember(
   });
 
   if (error) {
+    if (
+      error.code === "user_already_exists" ||
+      /already (registered|exists)|user already exists|email.*already/i.test(error.message)
+    ) {
+      return { error: "An account with this email already exists. Please log in or use a different email address." };
+    }
     return { error: error.message };
+  }
+
+  if (data.user && data.user.identities?.length === 0) {
+    return { error: "An account with this email already exists. Please log in or use a different email address." };
+  }
+
+  if (!data.user) {
+    return { error: "We couldn't create your account. Please try again." };
   }
 
   redirect("/dashboard");
